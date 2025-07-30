@@ -7,9 +7,11 @@ components of the application, such as the quiz, timer, and configuration
 management. It serves as the main entry point for running training sessions.
 """
 
-import sys
-import os
 import logging
+import os
+import sys
+from typing import Optional
+
 from nihon_cli.core.quiz import Quiz
 from nihon_cli.core.timer import LearningTimer
 
@@ -24,12 +26,12 @@ class NihonCli:
     the quiz and timer, handling the session loop, and managing application state.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes the NihonCli application.
         """
-        self.quiz = None
-        self.timer = None
+        self.quiz: Optional[Quiz] = None
+        self.timer: Optional[LearningTimer] = None
         logging.basicConfig(
             level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
         )
@@ -44,7 +46,7 @@ class NihonCli:
         """
         return f"Nihon CLI Version {__version__}"
 
-    def run_training_session(self, character_set: str, test_mode: bool = False):
+    def run_training_session(self, character_set: str, test_mode: bool = False) -> None:
         """
         Runs a full training session for the specified character set.
 
@@ -68,10 +70,14 @@ class NihonCli:
             sys.exit(0)
         except Exception as e:
             logging.error(f"An unexpected error occurred: {e}", exc_info=True)
-            print(f"\nEin unerwarteter Fehler ist aufgetreten: {e}", file=sys.stderr)
+            print(
+                "\nEin unerwarteter Fehler ist aufgetreten. "
+                "Weitere Details finden Sie in den Log-Dateien.",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
-    def _setup_components(self, character_set: str, test_mode: bool):
+    def _setup_components(self, character_set: str, test_mode: bool) -> None:
         """
         Initializes and configures the core components (Quiz and Timer).
 
@@ -87,11 +93,22 @@ class NihonCli:
         interval = 5 if test_mode else 1500  # 5 seconds for test, 25 minutes for normal
         self.timer = LearningTimer(interval)
 
-    def _clear_terminal(self):
-        """Clears the terminal screen."""
-        os.system("cls" if os.name == "nt" else "clear")
+    def _clear_terminal(self) -> None:
+        """
+        Clears the terminal screen.
 
-    def _handle_session_loop(self):
+        This method uses ANSI escape codes for POSIX systems and the 'cls'
+        command for Windows, avoiding the use of 'clear' to prevent potential
+        command injection risks.
+        """
+        if os.name == "nt":
+            os.system("cls")
+        else:
+            # Use ANSI escape codes to clear the screen and move the cursor
+            # to the top-left, which is safer than calling 'clear'.
+            print("\033[H\033[J", end="")
+
+    def _handle_session_loop(self) -> None:
         """
         Manages the continuous loop of quiz sessions and breaks.
         """

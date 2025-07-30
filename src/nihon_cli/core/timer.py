@@ -1,18 +1,17 @@
-import time
-import os
-import sys
 import logging
+import sys
+import time
+
 
 class LearningTimer:
     """
     Manages learning sessions with a configurable timer.
 
     Provides functionalities for a standard 25-minute learning interval and
-    a 5-second test mode. It includes a countdown display and handles
-    terminal clearing between sessions for a clean user interface.
+    a 5-second test mode. It includes a countdown display.
     """
 
-    def __init__(self, interval_seconds: int = 1500):
+    def __init__(self, interval_seconds: int = 1500) -> None:
         """
         Initializes the LearningTimer.
 
@@ -21,11 +20,13 @@ class LearningTimer:
                                   Defaults to 1500 (25 minutes).
         """
         self.interval_seconds = interval_seconds
-        self.is_test = (interval_seconds == 5)
-        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-        logging.info(f"Timer initialized for {self.interval_seconds} seconds. Test mode: {self.is_test}")
+        self.is_test = interval_seconds == 5
+        logging.info(
+            f"Timer initialized for {self.interval_seconds} seconds. "
+            f"Test mode: {self.is_test}"
+        )
 
-    def wait_for_next_session(self):
+    def wait_for_next_session(self) -> None:
         """
         Waits for the configured interval while displaying a countdown.
 
@@ -36,25 +37,15 @@ class LearningTimer:
             for i in range(self.interval_seconds, 0, -1):
                 self.show_countdown(i)
                 time.sleep(1)
-            self.clear_terminal()
-            print("Starting next session...")
+            # The terminal is cleared in the main app loop.
+            print("\nStarting next session...")
             logging.info("Interval finished. Starting next session.")
         except KeyboardInterrupt:
             print("\nTimer stopped by user. Exiting.")
             logging.info("Timer stopped by user.")
             sys.exit(0)
 
-    def clear_terminal(self):
-        """
-        Clears the terminal screen.
-
-        Uses 'cls' for Windows and 'clear' for macOS and Linux.
-        """
-        command = 'cls' if os.name == 'nt' else 'clear'
-        os.system(command)
-        logging.info("Terminal cleared.")
-
-    def show_countdown(self, remaining_seconds: int):
+    def show_countdown(self, remaining_seconds: int) -> None:
         """
         Displays a countdown timer on a single line in the terminal.
 

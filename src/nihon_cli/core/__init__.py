@@ -4,4 +4,4 @@ from .character import Character
 from .quiz import Quiz
 from .timer import LearningTimer
 
-__all__ = ['Character', 'Quiz', 'LearningTimer']
+__all__ = ["Character", "Quiz", "LearningTimer"]

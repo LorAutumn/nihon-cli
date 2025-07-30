@@ -5,15 +5,16 @@ This setup script configures the Nihon CLI package for installation
 and creates the 'nihon' command-line tool.
 """
 
-from setuptools import setup, find_packages
 import os
+
+from setuptools import find_packages, setup
 
 
 def read_long_description():
     """Read the long description from README.md if it exists."""
-    readme_path = os.path.join(os.path.dirname(__file__), 'README.md')
+    readme_path = os.path.join(os.path.dirname(__file__), "README.md")
     if os.path.exists(readme_path):
-        with open(readme_path, 'r', encoding='utf-8') as f:
+        with open(readme_path, "r", encoding="utf-8") as f:
             return f.read()
     return "A Python-based CLI tool for learning Japanese characters (Hiragana and Katakana)."
 

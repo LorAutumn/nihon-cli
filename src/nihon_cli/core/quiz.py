@@ -1,12 +1,15 @@
+# src/nihon_cli/core/quiz.py
 """
 Quiz logic for Japanese character learning.
 
-This module contains the Quiz class that handles the quiz functionality
-including character selection, user input validation, and feedback.
+This module contains the Quiz class, which orchestrates the quiz functionality,
+including character selection, user input validation, and session feedback.
 """
 
 import random
-from nihon_cli.core.character import Character
+from typing import List
+
+from nihon_cli.core.character import Character, CharacterType
 from nihon_cli.data.hiragana import HIRAGANA_CHARACTERS
 from nihon_cli.data.katakana import KATAKANA_CHARACTERS
 
@@ -19,20 +22,32 @@ class Quiz:
     user input validation, and providing feedback on answers.
     """
 
-    def __init__(self, character_set: str):
+    def __init__(self, character_set: CharacterType) -> None:
         """
-        Initialize a Quiz instance.
+        Initializes a Quiz instance.
 
         Args:
-            character_set (str): The character set to use ('hiragana', 'katakana', or 'mixed')
+            character_set (CharacterType): The character set to use, which can be
+                                           'hiragana', 'katakana', or 'mixed'.
         """
-        self.character_set_name = character_set
-        self.characters = self._load_characters(character_set)
-        self.correct_answers = 0
-        self.incorrect_answers = 0
+        self.character_set_name: CharacterType = character_set
+        self.characters: List[Character] = self._load_characters(character_set)
+        self.correct_answers: int = 0
+        self.incorrect_answers: int = 0
 
-    def _load_characters(self, character_set: str) -> list[Character]:
-        """Loads the specified character set."""
+    def _load_characters(self, character_set: CharacterType) -> List[Character]:
+        """
+        Loads the specified character set.
+
+        Args:
+            character_set (CharacterType): The name of the character set to load.
+
+        Returns:
+            List[Character]: A list of Character objects.
+
+        Raises:
+            ValueError: If an invalid character set name is provided.
+        """
         if character_set == "hiragana":
             return HIRAGANA_CHARACTERS
         elif character_set == "katakana":
@@ -40,17 +55,29 @@ class Quiz:
         elif character_set == "mixed":
             return HIRAGANA_CHARACTERS + KATAKANA_CHARACTERS
         else:
+            # This case should ideally not be reached if inputs are validated upstream.
             raise ValueError(
                 "Invalid character set. Choose 'hiragana', 'katakana', or 'mixed'."
             )
 
-    def _select_questions(self, count: int = 10) -> list[Character]:
-        """Selects a random subset of characters for the quiz."""
+    def _select_questions(self, count: int = 10) -> List[Character]:
+        """
+        Selects a random subset of characters for the quiz.
+
+        This method prevents errors by ensuring the number of requested
+        questions does not exceed the number of available characters.
+
+        Args:
+            count (int): The desired number of questions. Defaults to 10.
+
+        Returns:
+            List[Character]: A list of characters to be used as questions.
+        """
         return random.sample(self.characters, min(count, len(self.characters)))
 
-    def run_session(self):
+    def run_session(self) -> None:
         """
-        Run a complete quiz session with 10 random characters.
+        Runs a complete quiz session with a default of 10 random characters.
         """
         print(f"Starte eine neue Quiz-Session für {self.character_set_name}...")
         self.correct_answers = 0
@@ -68,6 +95,9 @@ class Quiz:
     def ask_question(self, character: Character) -> bool:
         """
         Asks a single question, validates the answer, and provides feedback.
+
+        The user's input is sanitized by stripping whitespace and converting to
+        lowercase to ensure a fair comparison.
 
         Args:
             character (Character): The character to ask the user about.
@@ -91,6 +121,12 @@ class Quiz:
     def get_session_results(self) -> str:
         """
         Returns a formatted string with the results of the current session.
+
+        Calculates the accuracy and provides a summary of correct and
+        incorrect answers.
+
+        Returns:
+            str: A summary of the session results.
         """
         total = self.correct_answers + self.incorrect_answers
         if total == 0:
