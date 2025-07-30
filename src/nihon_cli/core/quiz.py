@@ -6,23 +6,23 @@ including character selection, user input validation, and feedback.
 """
 
 import random
-from src.nihon_cli.core.character import Character
-from src.nihon_cli.data.hiragana import HIRAGANA_CHARACTERS
-from src.nihon_cli.data.katakana import KATAKANA_CHARACTERS
+from nihon_cli.core.character import Character
+from nihon_cli.data.hiragana import HIRAGANA_CHARACTERS
+from nihon_cli.data.katakana import KATAKANA_CHARACTERS
 
 
 class Quiz:
     """
     Handles quiz functionality for Japanese character learning.
-    
+
     This class manages quiz sessions, including random character selection,
     user input validation, and providing feedback on answers.
     """
-    
+
     def __init__(self, character_set: str):
         """
         Initialize a Quiz instance.
-        
+
         Args:
             character_set (str): The character set to use ('hiragana', 'katakana', or 'mixed')
         """
@@ -33,14 +33,16 @@ class Quiz:
 
     def _load_characters(self, character_set: str) -> list[Character]:
         """Loads the specified character set."""
-        if character_set == 'hiragana':
+        if character_set == "hiragana":
             return HIRAGANA_CHARACTERS
-        elif character_set == 'katakana':
+        elif character_set == "katakana":
             return KATAKANA_CHARACTERS
-        elif character_set == 'mixed':
+        elif character_set == "mixed":
             return HIRAGANA_CHARACTERS + KATAKANA_CHARACTERS
         else:
-            raise ValueError("Invalid character set. Choose 'hiragana', 'katakana', or 'mixed'.")
+            raise ValueError(
+                "Invalid character set. Choose 'hiragana', 'katakana', or 'mixed'."
+            )
 
     def _select_questions(self, count: int = 10) -> list[Character]:
         """Selects a random subset of characters for the quiz."""
@@ -53,13 +55,13 @@ class Quiz:
         print(f"Starte eine neue Quiz-Session für {self.character_set_name}...")
         self.correct_answers = 0
         self.incorrect_answers = 0
-        
+
         questions = self._select_questions(10)
-        
+
         for i, character in enumerate(questions, 1):
             print(f"\nFrage {i}/{len(questions)}")
             self.ask_question(character)
-            
+
         print("\n--- Session-Zusammenfassung ---")
         print(self.get_session_results())
 
@@ -73,8 +75,10 @@ class Quiz:
         Returns:
             bool: True if the answer was correct, False otherwise.
         """
-        user_input = input(f"Was ist das Romaji für '{character.symbol}'? ").strip().lower()
-        
+        user_input = (
+            input(f"Was ist das Romaji für '{character.symbol}'? ").strip().lower()
+        )
+
         if user_input == character.romaji:
             print("Richtig!")
             self.correct_answers += 1
@@ -91,7 +95,9 @@ class Quiz:
         total = self.correct_answers + self.incorrect_answers
         if total == 0:
             return "Keine Fragen beantwortet."
-            
+
         accuracy = (self.correct_answers / total) * 100
-        return (f"Ergebnisse: {self.correct_answers} Richtig, {self.incorrect_answers} Falsch\n"
-                f"Genauigkeit: {accuracy:.2f}%")
+        return (
+            f"Ergebnisse: {self.correct_answers} Richtig, {self.incorrect_answers} Falsch\n"
+            f"Genauigkeit: {accuracy:.2f}%"
+        )

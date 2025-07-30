@@ -10,10 +10,11 @@ management. It serves as the main entry point for running training sessions.
 import sys
 import os
 import logging
-from src.nihon_cli.core.quiz import Quiz
-from src.nihon_cli.core.timer import LearningTimer
+from nihon_cli.core.quiz import Quiz
+from nihon_cli.core.timer import LearningTimer
 
 __version__ = "0.1.0"
+
 
 class NihonCli:
     """
@@ -29,7 +30,9 @@ class NihonCli:
         """
         self.quiz = None
         self.timer = None
-        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+        logging.basicConfig(
+            level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+        )
         logging.info("NihonCli application initialized.")
 
     def get_version(self) -> str:
@@ -76,15 +79,17 @@ class NihonCli:
             character_set (str): The character set for the quiz.
             test_mode (bool): Flag for test mode.
         """
-        logging.info(f"Setting up components for character set '{character_set}' with test_mode={test_mode}.")
+        logging.info(
+            f"Setting up components for character set '{character_set}' with test_mode={test_mode}."
+        )
         self.quiz = Quiz(character_set)
-        
+
         interval = 5 if test_mode else 1500  # 5 seconds for test, 25 minutes for normal
         self.timer = LearningTimer(interval)
 
     def _clear_terminal(self):
         """Clears the terminal screen."""
-        os.system('cls' if os.name == 'nt' else 'clear')
+        os.system("cls" if os.name == "nt" else "clear")
 
     def _handle_session_loop(self):
         """
@@ -96,12 +101,12 @@ class NihonCli:
         mode_name = {
             "hiragana": "Hiragana",
             "katakana": "Katakana",
-            "mixed": "Hiragana & Katakana"
+            "mixed": "Hiragana & Katakana",
         }.get(self.quiz.character_set_name, "Unknown")
 
         print(f"Welcome to the {mode_name} training!")
         print("Press Ctrl+C to end the training at any time.")
-        
+
         while True:
             self._clear_terminal()
             self.quiz.run_session()

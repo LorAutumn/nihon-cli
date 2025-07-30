@@ -24,47 +24,36 @@ git clone <repository-url>
 cd nihon-cli
 ```
 
-2. Install with uv (recommended):
+2. Install the package in editable mode:
 ```bash
-uv sync --dev
-```
-
-Or using traditional pip:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -e .
+uv pip install -e .
 ```
 
 ### Production Installation
 
-```bash
-uv add nihon-cli
-```
-
-Or using pip:
-```bash
-pip install nihon-cli
-```
+(Coming soon)
 
 ## Usage
 
 Once installed, you can use the `nihon` command:
 
 ```bash
-# Basic usage (implementation coming soon)
+# Display the main help message
 nihon --help
 
-# Hiragana learning mode
+# Display help for the training commands
+nihon cli --help
+
+# Start a Hiragana training session
 nihon cli hiragana
 
-# Katakana learning mode  
+# Start a Katakana training session
 nihon cli katakana
 
-# Mixed mode
-nihon cli hiraganakatakana
+# Start a mixed Hiragana and Katakana training session
+nihon cli mixed
 
-# Test mode (5-second intervals)
+# Run a training session in test mode (5-second intervals)
 nihon cli hiragana --test
 ```
 
@@ -95,20 +84,22 @@ nihon-cli/
 
 ## Development Status
 
-**Current Phase: 1.1 - Project Setup and Basic Structure**
+**Current Phase: 5.2 - Entry Points and Installation**
 
 - ✅ Project structure created
 - ✅ Setup.py configured for CLI installation
-- ✅ Basic module structure established
-- ⏳ Core functionality implementation (upcoming phases)
+- ✅ Core functionality implemented
+- ✅ CLI interface finalized
+- ✅ Entry points and installation finalized
+- ⏳ Final testing and refinement (upcoming)
 
 ## Development Phases
 
-1. **Phase 1**: Project Setup and Basic Structure
-2. **Phase 2**: Domain Models and Data Structures
-3. **Phase 3**: Core Logic Implementation
-4. **Phase 4**: CLI Interface
-5. **Phase 5**: Integration and Main Entry Point
+1. **Phase 1**: Project Setup and Basic Structure (Completed)
+2. **Phase 2**: Domain Models and Data Structures (Completed)
+3. **Phase 3**: Core Logic Implementation (Completed)
+4. **Phase 4**: CLI Interface (Completed)
+5. **Phase 5**: Integration and Main Entry Point (In Progress)
 6. **Phase 6**: Testing and Refinement
 
 ## Requirements
@@ -131,10 +122,10 @@ MIT License (to be added)
 
 ## Roadmap
 
-- [ ] Complete core functionality implementation
-- [ ] Add comprehensive character datasets
-- [ ] Implement quiz and timer systems
-- [ ] Add CLI command handling
+- [x] Complete core functionality implementation
+- [x] Add comprehensive character datasets
+- [x] Implement quiz and timer systems
+- [x] Add CLI command handling
 - [ ] Create automated tests
 - [ ] Add progress tracking features
 - [ ] Implement advanced learning algorithms

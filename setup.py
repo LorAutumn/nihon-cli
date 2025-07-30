@@ -42,9 +42,7 @@ setup(
         "Programming Language :: Python :: 3.12",
     ],
     python_requires=">=3.8",
-    install_requires=[
-        "click>=8.0",
-    ],
+    install_requires=[],
     extras_require={
         "dev": [
             "pytest>=6.0",
@@ -55,7 +53,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "nihon=nihon_cli.cli:cli",
+            "nihon=nihon_cli.main:main",
         ],
     },
     keywords="japanese hiragana katakana learning cli education",
