@@ -16,7 +16,20 @@ Nihon CLI is designed to help users learn Japanese characters through interactiv
 
 ## Installation
 
-### Development Installation
+You can install Nihon CLI using either `pip` or `uvx`.
+
+### Using `uvx` (Recommended)
+
+`uvx` allows you to run the CLI tool in a temporary virtual environment without polluting your global Python installation.
+
+```bash
+# Run the tool directly using uvx
+uvx nihon-cli --help
+```
+
+### Using `pip`
+
+#### Development Installation
 
 1. Clone the repository:
 ```bash
@@ -26,16 +39,45 @@ cd nihon-cli
 
 2. Install the package in editable mode:
 ```bash
-uv pip install -e .
+pip install -e .
 ```
 
-### Production Installation
+#### Production Installation
 
-(Coming soon)
+You can install the package directly from GitHub:
+```bash
+pip install git+https://github.com/your-username/nihon-cli.git
+```
 
 ## Usage
 
-Once installed, you can use the `nihon` command:
+### With `uvx`
+
+You can run all commands by prefixing them with `uvx`:
+
+```bash
+# Display the main help message
+uvx nihon-cli --help
+
+# Display help for the training commands
+uvx nihon-cli cli --help
+
+# Start a Hiragana training session
+uvx nihon-cli cli hiragana
+
+# Start a Katakana training session
+uvx nihon-cli cli katakana
+
+# Start a mixed Hiragana and Katakana training session
+uvx nihon-cli cli mixed
+
+# Run a training session in test mode (5-second intervals)
+uvx nihon-cli cli hiragana --test
+```
+
+### With `pip`
+
+If you installed the package with `pip`, you can use the `nihon` command directly:
 
 ```bash
 # Display the main help message

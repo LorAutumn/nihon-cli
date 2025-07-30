@@ -26,16 +26,15 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "black>=24.8.0",
     "click>=8.1.8",
-    "isort>=5.13.2",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=6.0",
     "pytest-cov>=2.0",
-    "black>=21.0",
+    "black>=24.8.0",
+    "isort>=5.13.2",
     "flake8>=3.8",
     "mypy>=0.900",
 ]
