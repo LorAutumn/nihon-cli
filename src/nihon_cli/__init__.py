@@ -1,10 +1,5 @@
-"""
-Nihon CLI - A Python-based CLI tool for learning Japanese characters (Hiragana and Katakana).
+# src/nihon_cli/__init__.py
 
-This package provides automated learning intervals and quiz functionality
-for effective Japanese character memorization.
-"""
+from .cli import cli
 
-__version__ = "0.1.0" 
-__author__ = "Nihon CLI Team"
-__description__ = "CLI tool for learning Japanese characters"
+__all__ = ['cli']

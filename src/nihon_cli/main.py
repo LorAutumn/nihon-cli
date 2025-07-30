@@ -1,20 +1,16 @@
+# src/nihon_cli/main.py
 """
 Main entry point for the Nihon CLI application.
-
-This module serves as the primary entry point for the CLI tool,
-handling command-line arguments and initializing the application.
 """
+
+from nihon_cli.cli import cli
 
 def main():
     """
-    Main entry point for the Nihon CLI application.
-    
-    This function will be called when the 'nihon' command is executed.
-    Implementation will be added in later phases.
+    This function is the main entry point for the command-line interface.
+    It executes the CLI application.
     """
-    print("Nihon CLI - Japanese Character Learning Tool")
-    print("Implementation coming soon...")
-
+    cli()
 
 if __name__ == "__main__":
     main()

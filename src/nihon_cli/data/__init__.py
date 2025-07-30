@@ -1,6 +1,6 @@
-"""
-Data module for Japanese character datasets.
+# src/nihon_cli/data/__init__.py
 
-This module contains the character data for Hiragana and Katakana
-character sets used in the learning application.
-"""
+from .hiragana import HIRAGANA
+from .katakana import KATAKANA
+
+__all__ = ['HIRAGANA', 'KATAKANA']

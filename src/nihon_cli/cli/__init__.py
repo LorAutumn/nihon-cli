@@ -1,6 +1,5 @@
-"""
-CLI module for command-line interface handling.
+# src/nihon_cli/cli/__init__.py
 
-This module contains the command-line interface components
-for the Nihon CLI application.
-"""
+from .commands import cli
+
+__all__ = ['cli']

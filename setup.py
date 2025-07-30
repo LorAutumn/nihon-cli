@@ -43,7 +43,7 @@ setup(
     ],
     python_requires=">=3.8",
     install_requires=[
-        # No external dependencies - using only standard library
+        "click>=8.0",
     ],
     extras_require={
         "dev": [
@@ -55,7 +55,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "nihon=nihon_cli.main:main",
+            "nihon=nihon_cli.cli:cli",
         ],
     },
     keywords="japanese hiragana katakana learning cli education",

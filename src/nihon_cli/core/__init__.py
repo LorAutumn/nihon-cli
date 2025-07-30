@@ -1,6 +1,7 @@
-"""
-Core module for Nihon CLI.
+# src/nihon_cli/core/__init__.py
 
-This module contains the core domain models and business logic
-for the Japanese character learning application.
-"""
+from .character import Character
+from .quiz import Quiz
+from .timer import Timer
+
+__all__ = ['Character', 'Quiz', 'Timer']
