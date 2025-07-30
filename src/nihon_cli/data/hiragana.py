@@ -1,29 +1,146 @@
 """
-Hiragana character data for the Nihon CLI application.
+Hiragana character database.
 
-This module contains the complete set of Hiragana characters
-with their romanized representations.
+This module provides a complete list of Hiragana characters,
+including their Romaji transcriptions, based on the Character domain model.
 """
 
-from ..core.character import Character
+from src.nihon_cli.core.character import Character
 
+HIRAGANA_CHARACTERS: list[Character] = [
+    # Basic Hiragana (Gojūon)
+    Character(symbol='あ', romaji='a', character_type='hiragana'),
+    Character(symbol='い', romaji='i', character_type='hiragana'),
+    Character(symbol='う', romaji='u', character_type='hiragana'),
+    Character(symbol='え', romaji='e', character_type='hiragana'),
+    Character(symbol='お', romaji='o', character_type='hiragana'),
 
-# Hiragana character dataset
-# Implementation will be added in Phase 2
-HIRAGANA_CHARACTERS = [
-    # Basic characters will be defined here in Phase 2
-    # Example structure:
-    # Character(symbol="あ", romaji="a", character_type="hiragana"),
-    # Character(symbol="か", romaji="ka", character_type="hiragana"),
-    # ... more characters
+    Character(symbol='か', romaji='ka', character_type='hiragana'),
+    Character(symbol='き', romaji='ki', character_type='hiragana'),
+    Character(symbol='く', romaji='ku', character_type='hiragana'),
+    Character(symbol='け', romaji='ke', character_type='hiragana'),
+    Character(symbol='こ', romaji='ko', character_type='hiragana'),
+
+    Character(symbol='さ', romaji='sa', character_type='hiragana'),
+    Character(symbol='し', romaji='shi', character_type='hiragana'),
+    Character(symbol='す', romaji='su', character_type='hiragana'),
+    Character(symbol='せ', romaji='se', character_type='hiragana'),
+    Character(symbol='そ', romaji='so', character_type='hiragana'),
+
+    Character(symbol='た', romaji='ta', character_type='hiragana'),
+    Character(symbol='ち', romaji='chi', character_type='hiragana'),
+    Character(symbol='つ', romaji='tsu', character_type='hiragana'),
+    Character(symbol='て', romaji='te', character_type='hiragana'),
+    Character(symbol='と', romaji='to', character_type='hiragana'),
+
+    Character(symbol='な', romaji='na', character_type='hiragana'),
+    Character(symbol='に', romaji='ni', character_type='hiragana'),
+    Character(symbol='ぬ', romaji='nu', character_type='hiragana'),
+    Character(symbol='ね', romaji='ne', character_type='hiragana'),
+    Character(symbol='の', romaji='no', character_type='hiragana'),
+
+    Character(symbol='は', romaji='ha', character_type='hiragana'),
+    Character(symbol='ひ', romaji='hi', character_type='hiragana'),
+    Character(symbol='ふ', romaji='fu', character_type='hiragana'),
+    Character(symbol='へ', romaji='he', character_type='hiragana'),
+    Character(symbol='ほ', romaji='ho', character_type='hiragana'),
+
+    Character(symbol='ま', romaji='ma', character_type='hiragana'),
+    Character(symbol='み', romaji='mi', character_type='hiragana'),
+    Character(symbol='む', romaji='mu', character_type='hiragana'),
+    Character(symbol='め', romaji='me', character_type='hiragana'),
+    Character(symbol='も', romaji='mo', character_type='hiragana'),
+
+    Character(symbol='や', romaji='ya', character_type='hiragana'),
+    Character(symbol='ゆ', romaji='yu', character_type='hiragana'),
+    Character(symbol='よ', romaji='yo', character_type='hiragana'),
+
+    Character(symbol='ら', romaji='ra', character_type='hiragana'),
+    Character(symbol='り', romaji='ri', character_type='hiragana'),
+    Character(symbol='る', romaji='ru', character_type='hiragana'),
+    Character(symbol='れ', romaji='re', character_type='hiragana'),
+    Character(symbol='ろ', romaji='ro', character_type='hiragana'),
+
+    Character(symbol='わ', romaji='wa', character_type='hiragana'),
+    Character(symbol='を', romaji='wo', character_type='hiragana'),
+
+    # Special Characters
+    Character(symbol='ん', romaji='n', character_type='hiragana'),
+    Character(symbol='っ', romaji='tsu', character_type='hiragana'), # Small tsu
+
+    # Dakuten and Handakuten
+    Character(symbol='が', romaji='ga', character_type='hiragana'),
+    Character(symbol='ぎ', romaji='gi', character_type='hiragana'),
+    Character(symbol='ぐ', romaji='gu', character_type='hiragana'),
+    Character(symbol='げ', romaji='ge', character_type='hiragana'),
+    Character(symbol='ご', romaji='go', character_type='hiragana'),
+
+    Character(symbol='ざ', romaji='za', character_type='hiragana'),
+    Character(symbol='じ', romaji='ji', character_type='hiragana'),
+    Character(symbol='ず', romaji='zu', character_type='hiragana'),
+    Character(symbol='ぜ', romaji='ze', character_type='hiragana'),
+    Character(symbol='ぞ', romaji='zo', character_type='hiragana'),
+
+    Character(symbol='だ', romaji='da', character_type='hiragana'),
+    Character(symbol='ぢ', romaji='ji', character_type='hiragana'),
+    Character(symbol='づ', romaji='zu', character_type='hiragana'),
+    Character(symbol='で', romaji='de', character_type='hiragana'),
+    Character(symbol='ど', romaji='do', character_type='hiragana'),
+
+    Character(symbol='ば', romaji='ba', character_type='hiragana'),
+    Character(symbol='び', romaji='bi', character_type='hiragana'),
+    Character(symbol='ぶ', romaji='bu', character_type='hiragana'),
+    Character(symbol='べ', romaji='be', character_type='hiragana'),
+    Character(symbol='ぼ', romaji='bo', character_type='hiragana'),
+
+    Character(symbol='ぱ', romaji='pa', character_type='hiragana'),
+    Character(symbol='ぴ', romaji='pi', character_type='hiragana'),
+    Character(symbol='ぷ', romaji='pu', character_type='hiragana'),
+    Character(symbol='ぺ', romaji='pe', character_type='hiragana'),
+    Character(symbol='ぽ', romaji='po', character_type='hiragana'),
+
+    # Combinations (Yōon)
+    Character(symbol='きゃ', romaji='kya', character_type='hiragana'),
+    Character(symbol='きゅ', romaji='kyu', character_type='hiragana'),
+    Character(symbol='きょ', romaji='kyo', character_type='hiragana'),
+
+    Character(symbol='しゃ', romaji='sha', character_type='hiragana'),
+    Character(symbol='しゅ', romaji='shu', character_type='hiragana'),
+    Character(symbol='しょ', romaji='sho', character_type='hiragana'),
+
+    Character(symbol='ちゃ', romaji='cha', character_type='hiragana'),
+    Character(symbol='ちゅ', romaji='chu', character_type='hiragana'),
+    Character(symbol='ちょ', romaji='cho', character_type='hiragana'),
+
+    Character(symbol='にゃ', romaji='nya', character_type='hiragana'),
+    Character(symbol='にゅ', romaji='nyu', character_type='hiragana'),
+    Character(symbol='にょ', romaji='nyo', character_type='hiragana'),
+
+    Character(symbol='ひゃ', romaji='hya', character_type='hiragana'),
+    Character(symbol='ひゅ', romaji='hyu', character_type='hiragana'),
+    Character(symbol='ひょ', romaji='hyo', character_type='hiragana'),
+
+    Character(symbol='みゃ', romaji='mya', character_type='hiragana'),
+    Character(symbol='みゅ', romaji='myu', character_type='hiragana'),
+    Character(symbol='みょ', romaji='myo', character_type='hiragana'),
+
+    Character(symbol='りゃ', romaji='rya', character_type='hiragana'),
+    Character(symbol='りゅ', romaji='ryu', character_type='hiragana'),
+    Character(symbol='りょ', romaji='ryo', character_type='hiragana'),
+
+    Character(symbol='ぎゃ', romaji='gya', character_type='hiragana'),
+    Character(symbol='ぎゅ', romaji='gyu', character_type='hiragana'),
+    Character(symbol='ぎょ', romaji='gyo', character_type='hiragana'),
+
+    Character(symbol='じゃ', romaji='ja', character_type='hiragana'),
+    Character(symbol='じゅ', romaji='ju', character_type='hiragana'),
+    Character(symbol='じょ', romaji='jo', character_type='hiragana'),
+
+    Character(symbol='びゃ', romaji='bya', character_type='hiragana'),
+    Character(symbol='びゅ', romaji='byu', character_type='hiragana'),
+    Character(symbol='びょ', romaji='byo', character_type='hiragana'),
+
+    Character(symbol='ぴゃ', romaji='pya', character_type='hiragana'),
+    Character(symbol='ぴゅ', romaji='pyu', character_type='hiragana'),
+    Character(symbol='ぴょ', romaji='pyo', character_type='hiragana'),
 ]
-
-
-def get_hiragana_characters():
-    """
-    Get the complete list of Hiragana characters.
-    
-    Returns:
-        list: List of Character objects representing Hiragana characters
-    """
-    return HIRAGANA_CHARACTERS
