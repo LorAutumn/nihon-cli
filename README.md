@@ -6,13 +6,17 @@ A Python-based CLI tool for learning Japanese characters (Hiragana and Katakana)
 
 Nihon CLI is designed to help users learn Japanese characters through interactive quiz sessions with timed intervals. The application uses a spaced repetition approach with 25-minute learning intervals to optimize retention.
 
-## Features (Planned)
+## Features
 
-- **Interactive Quiz Sessions**: Learn Hiragana and Katakana characters through randomized quizzes
-- **Automated Learning Intervals**: 25-minute standard intervals with 5-second test mode
-- **Character Sets**: Support for Hiragana, Katakana, and mixed character sets
-- **Simple CLI Interface**: Easy-to-use command-line interface
-- **No External Dependencies**: Uses only Python standard library
+- **Interactive Quiz Sessions**: Learn Hiragana and Katakana characters through randomized quizzes.
+- **Visual Feedback**: Emojis provide instant feedback on your answers (✅ for correct, ❌ for incorrect).
+- **Automated Learning Intervals**: 25-minute standard intervals, configurable and with a 5-second test mode.
+- **Character Sets**: Support for Hiragana, Katakana, and mixed character sets.
+- **Configuration**: Customize behavior with a `config.json` file (`--no-sound`, notification types).
+- **Audio Notifications**: Sound alerts at the end of a learning interval.
+- **Notification Types**: Choose between different system notification styles.
+- **Simple CLI Interface**: Easy-to-use command-line interface.
+- **No External Dependencies**: Uses only the Python standard library.
 
 ## Installation
 
@@ -49,6 +53,14 @@ You can install the package directly from GitHub:
 pip install git+https://github.com/your-username/nihon-cli.git
 ```
 
+### Uninstallation
+
+To uninstall the package, run the following command:
+
+```bash
+pip uninstall nihon-cli
+```
+
 ## Usage
 
 ### With `uvx`
@@ -73,6 +85,30 @@ uvx nihon-cli cli mixed
 
 # Run a training session in test mode (5-second intervals)
 uvx nihon-cli cli hiragana --test
+
+# Disable audio notifications for a session
+uvx nihon-cli cli hiragana --no-sound
+
+# Set a specific notification type
+uvx nihon-cli cli hiragana --notification-type "mac"
+```
+
+## Visual Feedback
+
+Nihon CLI uses emojis to provide immediate visual feedback during quiz sessions, making the learning process more intuitive and engaging.
+
+- **✅ Correct Answer**: Displayed when you provide the correct Romaji for a character.
+- **❌ Incorrect Answer**: Displayed when your answer is wrong, along with the correct answer.
+- **🎉 Perfect Score**: A special celebration for achieving 100% accuracy in a session.
+
+### Example Output
+
+```
+Was ist das Romaji für 'あ'? a
+✅ Richtig!
+
+Was ist das Romaji für 'い'? u
+❌ Falsch! Die richtige Antwort ist: i
 ```
 
 ### With `pip`
@@ -97,7 +133,35 @@ nihon cli mixed
 
 # Run a training session in test mode (5-second intervals)
 nihon cli hiragana --test
+
+# Disable audio notifications for a session
+nihon cli hiragana --no-sound
+
+# Set a specific notification type
+nihon cli hiragana --notification-type "mac"
 ```
+
+## Configuration
+
+Nihon CLI can be configured using a `config.json` file located in `~/.config/nihon-cli/`. The CLI flags will always override the settings in the configuration file.
+
+The following options are available:
+
+| Key                 | Type    | Description                                                                 | Default | CLI Flag                  |
+|---------------------|---------|-----------------------------------------------------------------------------|---------|---------------------------|
+| `enable_sound`      | boolean | Enable or disable audio notifications at the end of an interval.            | `true`  | `--no-sound`              |
+| `notification_type` | string  | Sets the notification type. Options: `bell`, `sound`, `desktop`.            | `bell`  | `--notification-type`     |
+
+### Example `config.json`
+
+```json
+{
+  "enable_sound": false,
+  "notification_type": "desktop"
+}
+```
+
+To create the configuration file, you can manually create the directory and file at `~/.config/nihon-cli/config.json`.
 
 ## Project Structure
 

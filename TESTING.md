@@ -20,11 +20,26 @@ Alle Hilfe-Kommandos wurden erfolgreich getestet und zeigen die erwartete Ausgab
 
 Die funktionalen Tests wurden im `--test`-Modus mit einem 5-Sekunden-Timer durchgeführt.
 
+### Quiz-Feedback-Tests
+
+Das visuelle Feedback-System wurde überprüft, um sicherzustellen, dass die richtigen Emojis angezeigt werden.
+
+| Szenario | Status | Anmerkungen |
+|---|---|---|
+| Richtige Antwort | ✅ OK | Zeigt das ✅-Emoji an. |
+| Falsche Antwort | ✅ OK | Zeigt das ❌-Emoji und die richtige Antwort an. |
+| Perfekte Punktzahl | ✅ OK | Zeigt die 🎉-Feier-Nachricht bei 100% Genauigkeit an. |
+
+### Allgemeine Funktionstests
+
 | Kommando | Status | Anmerkungen |
 |---|---|---|
 | `nihon cli hiragana --test` | ✅ OK | Startet das Hiragana-Quiz korrekt. Quiz-Logik, Feedback und Timer funktionieren wie erwartet. |
 | `nihon cli katakana --test` | ✅ OK | Startet das Katakana-Quiz korrekt. Quiz-Logik, Feedback und Timer funktionieren wie erwartet. |
 | `nihon cli mixed --test` | ✅ OK | Startet das gemischte Quiz korrekt. Quiz-Logik, Feedback und Timer funktionieren wie erwartet. |
+| `nihon cli hiragana --no-sound` | ✅ OK | Audio-Benachrichtigung wird deaktiviert. |
+| `nihon cli hiragana --no-focus` | ✅ OK | Terminal-Fokus wird deaktiviert. |
+| `nihon cli hiragana --notification-type mac` | ✅ OK | Benachrichtigungstyp wird auf `mac` gesetzt. |
 
 ## 3. Error-Handling Tests
 
@@ -56,6 +71,19 @@ Der Installations- und Deinstallationsprozess wurde getestet.
 | `pip install -e .` | ✅ OK | Das Paket wird erfolgreich im "editable" Modus installiert. |
 | `nihon` nach Installation | ✅ OK | Das `nihon`-Kommando ist global verfügbar und funktioniert. |
 | `pip uninstall nihon-cli` | ✅ OK | Das Paket wird erfolgreich deinstalliert. |
+
+## 6. Konfigurations-Tests
+
+Tests für das Konfigurationssystem mit `~/.config/nihon-cli/config.json`.
+
+| Szenario | Status | Anmerkungen |
+|---|---|---|
+| Standardwerte ohne Konfigurationsdatei | ✅ OK | Das Programm verwendet die Standardwerte (Sound an, Fokus an, Benachrichtigungstyp `default`). |
+| Konfigurationsdatei mit `sound: false` | ✅ OK | Audio-Benachrichtigung ist standardmäßig deaktiviert. |
+| Konfigurationsdatei mit `focus: false` | ✅ OK | Terminal-Fokus ist standardmäßig deaktiviert. |
+| Konfigurationsdatei mit `notification_type: mac` | ✅ OK | Benachrichtigungstyp ist standardmäßig auf `mac` gesetzt. |
+| CLI-Flag überschreibt Konfiguration (`--no-sound`) | ✅ OK | Das CLI-Flag hat Vorrang vor der Konfigurationsdatei. |
+| Ungültige JSON-Konfiguration | ✅ OK | Das Programm ignoriert die fehlerhafte Konfiguration und verwendet die Standardwerte. |
 
 ## Zusammenfassung
 

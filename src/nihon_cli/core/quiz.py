@@ -110,11 +110,11 @@ class Quiz:
         )
 
         if user_input == character.romaji:
-            print("Richtig!")
+            print("✅ Richtig!")
             self.correct_answers += 1
             return True
         else:
-            print(f"Falsch! Die richtige Antwort ist: {character.romaji}")
+            print(f"❌ Falsch! Die richtige Antwort ist: {character.romaji}")
             self.incorrect_answers += 1
             return False
 
@@ -133,7 +133,12 @@ class Quiz:
             return "Keine Fragen beantwortet."
 
         accuracy = (self.correct_answers / total) * 100
-        return (
+        result = (
             f"Ergebnisse: {self.correct_answers} Richtig, {self.incorrect_answers} Falsch\n"
             f"Genauigkeit: {accuracy:.2f}%"
         )
+
+        if accuracy == 100:
+            result += "\n🎉 Perfekte Punktzahl! Großartige Arbeit!"
+
+        return result
