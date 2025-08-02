@@ -12,6 +12,13 @@ from typing import List
 from nihon_cli.core.character import Character, CharacterType
 from nihon_cli.data.hiragana import HIRAGANA_CHARACTERS
 from nihon_cli.data.katakana import KATAKANA_CHARACTERS
+from nihon_cli.ui.formatting import (
+    draw_box,
+    format_correct_answer,
+    format_incorrect_answer,
+    format_question,
+    format_quiz_session,
+)
 
 
 class Quiz:
@@ -79,20 +86,23 @@ class Quiz:
         """
         Runs a complete quiz session with a default of 10 random characters.
         """
-        print(f"Starte eine neue Quiz-Session für {self.character_set_name}...")
+        questions = self._select_questions(10)
+        session_info = {
+            "type": self.character_set_name,
+            "questions": len(questions),
+        }
+        print(format_quiz_session(session_info))
+
         self.correct_answers = 0
         self.incorrect_answers = 0
 
-        questions = self._select_questions(10)
-
         for i, character in enumerate(questions, 1):
-            print(f"\nFrage {i}/{len(questions)}")
-            self.ask_question(character)
+            self.ask_question(character, i, len(questions))
 
-        print("\n--- Session-Zusammenfassung ---")
-        print(self.get_session_results())
+        print("\n")
+        print(draw_box(self.get_session_results(), title="Session-Zusammenfassung"))
 
-    def ask_question(self, character: Character) -> bool:
+    def ask_question(self, character: Character, question_number: int, total_questions: int) -> bool:
         """
         Asks a single question, validates the answer, and provides feedback.
 
@@ -101,20 +111,23 @@ class Quiz:
 
         Args:
             character (Character): The character to ask the user about.
+            question_number (int): The current question number.
+            total_questions (int): The total number of questions in the quiz.
 
         Returns:
             bool: True if the answer was correct, False otherwise.
         """
-        user_input = (
-            input(f"Was ist das Romaji für '{character.symbol}'? ").strip().lower()
-        )
+        question_text = f"Was ist das Romaji für '{character.symbol}'?"
+        print("\n" + format_question(question_text, question_number, total_questions))
+        
+        user_input = input("Antwort: ").strip().lower()
 
         if user_input == character.romaji:
-            print("✅ Richtig!")
+            print(format_correct_answer())
             self.correct_answers += 1
             return True
         else:
-            print(f"❌ Falsch! Die richtige Antwort ist: {character.romaji}")
+            print(format_incorrect_answer(user_input, character.romaji))
             self.incorrect_answers += 1
             return False
 
@@ -133,12 +146,7 @@ class Quiz:
             return "Keine Fragen beantwortet."
 
         accuracy = (self.correct_answers / total) * 100
-        result = (
+        return (
             f"Ergebnisse: {self.correct_answers} Richtig, {self.incorrect_answers} Falsch\n"
             f"Genauigkeit: {accuracy:.2f}%"
         )
-
-        if accuracy == 100:
-            result += "\n🎉 Perfekte Punktzahl! Großartige Arbeit!"
-
-        return result

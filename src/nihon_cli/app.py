@@ -12,7 +12,6 @@ import os
 import sys
 from typing import Optional
 
-from nihon_cli.core.config import Config
 from nihon_cli.core.quiz import Quiz
 from nihon_cli.core.timer import LearningTimer
 
@@ -27,11 +26,10 @@ class NihonCli:
     the quiz and timer, handling the session loop, and managing application state.
     """
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self) -> None:
         """
         Initializes the NihonCli application.
         """
-        self.config = config
         self.quiz: Optional[Quiz] = None
         self.timer: Optional[LearningTimer] = None
         logging.basicConfig(
@@ -88,17 +86,12 @@ class NihonCli:
             test_mode (bool): Flag for test mode.
         """
         logging.info(
-            f"Setting up components for character set '{character_set}' with "
-            f"test_mode={test_mode}, enable_sound={self.config.enable_sound}."
+            f"Setting up components for character set '{character_set}' with test_mode={test_mode}."
         )
         self.quiz = Quiz(character_set)
 
         interval = 5 if test_mode else 1500  # 5 seconds for test, 25 minutes for normal
-        self.timer = LearningTimer(
-            interval,
-            enable_sound=self.config.enable_sound,
-            notification_type=self.config.notification_type,
-        )
+        self.timer = LearningTimer(interval)
 
     def _clear_terminal(self) -> None:
         """

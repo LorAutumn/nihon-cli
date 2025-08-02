@@ -8,60 +8,41 @@ import sys
 from typing import List, Optional
 
 from nihon_cli.app import NihonCli
-from nihon_cli.core.config import Config
 
 
-def handle_hiragana_command(args: argparse.Namespace, config: Config) -> None:
+def handle_hiragana_command(args: argparse.Namespace) -> None:
     """
     Handler for the Hiragana training command.
 
     Args:
         args (argparse.Namespace): The parsed command-line arguments.
-        config (Config): The application configuration object.
+                                   Expected to have a 'test' attribute.
     """
-    if "no_sound" in args and args.no_sound:
-        config.enable_sound = False
-
-    if "notification_type" in args and args.notification_type:
-        config.notification_type = args.notification_type
-
-    cli_app = NihonCli(config)
+    cli_app = NihonCli()
     cli_app.run_training_session("hiragana", args.test)
 
 
-def handle_katakana_command(args: argparse.Namespace, config: Config) -> None:
+def handle_katakana_command(args: argparse.Namespace) -> None:
     """
     Handler for the Katakana training command.
 
     Args:
         args (argparse.Namespace): The parsed command-line arguments.
-        config (Config): The application configuration object.
+                                   Expected to have a 'test' attribute.
     """
-    if "no_sound" in args and args.no_sound:
-        config.enable_sound = False
-
-    if "notification_type" in args and args.notification_type:
-        config.notification_type = args.notification_type
-
-    cli_app = NihonCli(config)
+    cli_app = NihonCli()
     cli_app.run_training_session("katakana", args.test)
 
 
-def handle_mixed_command(args: argparse.Namespace, config: Config) -> None:
+def handle_mixed_command(args: argparse.Namespace) -> None:
     """
     Handler for the mixed training command.
 
     Args:
         args (argparse.Namespace): The parsed command-line arguments.
-        config (Config): The application configuration object.
+                                   Expected to have a 'test' attribute.
     """
-    if "no_sound" in args and args.no_sound:
-        config.enable_sound = False
-
-    if "notification_type" in args and args.notification_type:
-        config.notification_type = args.notification_type
-
-    cli_app = NihonCli(config)
+    cli_app = NihonCli()
     cli_app.run_training_session("mixed", args.test)
 
 
@@ -101,16 +82,6 @@ def setup_argument_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Runs the training in a 5-second test mode.",
     )
-    hiragana_parser.add_argument(
-        "--no-sound",
-        action="store_true",
-        help="Disables audio notifications.",
-    )
-    hiragana_parser.add_argument(
-        "--notification-type",
-        choices=["bell", "sound", "desktop"],
-        help="Sets the notification type (overrides config).",
-    )
     hiragana_parser.set_defaults(func=handle_hiragana_command)
 
     # Subparser for 'katakana'
@@ -122,16 +93,6 @@ def setup_argument_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Runs the training in a 5-second test mode.",
     )
-    katakana_parser.add_argument(
-        "--no-sound",
-        action="store_true",
-        help="Disables audio notifications.",
-    )
-    katakana_parser.add_argument(
-        "--notification-type",
-        choices=["bell", "sound", "desktop"],
-        help="Sets the notification type (overrides config).",
-    )
     katakana_parser.set_defaults(func=handle_katakana_command)
 
     # Subparser for 'mixed'
@@ -142,16 +103,6 @@ def setup_argument_parser() -> argparse.ArgumentParser:
         "--test",
         action="store_true",
         help="Runs the training in a 5-second test mode.",
-    )
-    mixed_parser.add_argument(
-        "--no-sound",
-        action="store_true",
-        help="Disables audio notifications.",
-    )
-    mixed_parser.add_argument(
-        "--notification-type",
-        choices=["bell", "sound", "desktop"],
-        help="Sets the notification type (overrides config).",
     )
     mixed_parser.set_defaults(func=handle_mixed_command)
 
@@ -167,7 +118,6 @@ def parse_and_execute(args: Optional[List[str]] = None) -> None:
                                               If None, sys.argv[1:] is used.
                                               Defaults to None.
     """
-    config = Config()
     parser = setup_argument_parser()
 
     # If no arguments are provided (e.g., just 'nihon'), show help
@@ -178,7 +128,7 @@ def parse_and_execute(args: Optional[List[str]] = None) -> None:
     parsed_args = parser.parse_args(args)
 
     if hasattr(parsed_args, "func"):
-        parsed_args.func(parsed_args, config)
+        parsed_args.func(parsed_args)
     else:
         # Fallback if a command is called without a function
         # (should not happen with required=True)
