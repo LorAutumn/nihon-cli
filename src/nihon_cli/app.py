@@ -46,7 +46,7 @@ class NihonCli:
         """
         return f"Nihon CLI Version {__version__}"
 
-    def run_training_session(self, character_set: str, test_mode: bool = False) -> None:
+    def run_training_session(self, character_set: str, test_mode: bool = False, advanced_mode: bool = False) -> None:
         """
         Runs a full training session for the specified character set.
 
@@ -56,9 +56,10 @@ class NihonCli:
         Args:
             character_set (str): The character set for the quiz ('hiragana', 'katakana', 'mixed').
             test_mode (bool): If True, runs in a short test mode (5s timer).
+            advanced_mode (bool): If True, includes advanced characters (combination characters/Yōon).
         """
         try:
-            self._setup_components(character_set, test_mode)
+            self._setup_components(character_set, test_mode, advanced_mode)
             self._handle_session_loop()
         except ValueError as e:
             logging.error(f"Configuration error: {e}")
@@ -77,18 +78,19 @@ class NihonCli:
             )
             sys.exit(1)
 
-    def _setup_components(self, character_set: str, test_mode: bool) -> None:
+    def _setup_components(self, character_set: str, test_mode: bool, advanced_mode: bool = False) -> None:
         """
         Initializes and configures the core components (Quiz and Timer).
 
         Args:
             character_set (str): The character set for the quiz.
             test_mode (bool): Flag for test mode.
+            advanced_mode (bool): Flag for advanced mode (includes combination characters).
         """
         logging.info(
-            f"Setting up components for character set '{character_set}' with test_mode={test_mode}."
+            f"Setting up components for character set '{character_set}' with test_mode={test_mode}, advanced_mode={advanced_mode}."
         )
-        self.quiz = Quiz(character_set)
+        self.quiz = Quiz(character_set, include_advanced=advanced_mode)
 
         interval = 5 if test_mode else 1500  # 5 seconds for test, 25 minutes for normal
         self.timer = LearningTimer(interval)

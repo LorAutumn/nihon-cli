@@ -16,10 +16,10 @@ def handle_hiragana_command(args: argparse.Namespace) -> None:
 
     Args:
         args (argparse.Namespace): The parsed command-line arguments.
-                                   Expected to have a 'test' attribute.
+                                   Expected to have 'test' and 'advanced' attributes.
     """
     cli_app = NihonCli()
-    cli_app.run_training_session("hiragana", args.test)
+    cli_app.run_training_session("hiragana", args.test, args.advanced)
 
 
 def handle_katakana_command(args: argparse.Namespace) -> None:
@@ -28,10 +28,10 @@ def handle_katakana_command(args: argparse.Namespace) -> None:
 
     Args:
         args (argparse.Namespace): The parsed command-line arguments.
-                                   Expected to have a 'test' attribute.
+                                   Expected to have 'test' and 'advanced' attributes.
     """
     cli_app = NihonCli()
-    cli_app.run_training_session("katakana", args.test)
+    cli_app.run_training_session("katakana", args.test, args.advanced)
 
 
 def handle_mixed_command(args: argparse.Namespace) -> None:
@@ -40,10 +40,10 @@ def handle_mixed_command(args: argparse.Namespace) -> None:
 
     Args:
         args (argparse.Namespace): The parsed command-line arguments.
-                                   Expected to have a 'test' attribute.
+                                   Expected to have 'test' and 'advanced' attributes.
     """
     cli_app = NihonCli()
-    cli_app.run_training_session("mixed", args.test)
+    cli_app.run_training_session("mixed", args.test, args.advanced)
 
 
 def setup_argument_parser() -> argparse.ArgumentParser:
@@ -58,23 +58,17 @@ def setup_argument_parser() -> argparse.ArgumentParser:
         argparse.ArgumentParser: The configured parser instance.
     """
     parser = argparse.ArgumentParser(
-        prog="nihon",
+        prog="nihon-cli",
         description="Nihon CLI is a tool to learn Japanese characters.",
-        epilog="Use 'nihon cli <command> --help' for more information on a specific command.",
+        epilog="Use 'nihon-cli <command> --help' for more information on a specific command.",
     )
 
     subparsers = parser.add_subparsers(
-        dest="main_command", help="Available main commands"
-    )
-
-    # Subparser for the 'cli' command
-    cli_parser = subparsers.add_parser("cli", help="Starts the character training.")
-    cli_subparsers = cli_parser.add_subparsers(
         dest="command", help="Select a training mode", required=True
     )
 
     # Subparser for 'hiragana'
-    hiragana_parser = cli_subparsers.add_parser(
+    hiragana_parser = subparsers.add_parser(
         "hiragana", help="Starts a pure Hiragana training."
     )
     hiragana_parser.add_argument(
@@ -82,10 +76,15 @@ def setup_argument_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Runs the training in a 5-second test mode.",
     )
+    hiragana_parser.add_argument(
+        "--advanced",
+        action="store_true",
+        help="Includes advanced characters (combination characters/Yōon) in the training.",
+    )
     hiragana_parser.set_defaults(func=handle_hiragana_command)
 
     # Subparser for 'katakana'
-    katakana_parser = cli_subparsers.add_parser(
+    katakana_parser = subparsers.add_parser(
         "katakana", help="Starts a pure Katakana training."
     )
     katakana_parser.add_argument(
@@ -93,16 +92,26 @@ def setup_argument_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Runs the training in a 5-second test mode.",
     )
+    katakana_parser.add_argument(
+        "--advanced",
+        action="store_true",
+        help="Includes advanced characters (combination characters/Yōon) in the training.",
+    )
     katakana_parser.set_defaults(func=handle_katakana_command)
 
     # Subparser for 'mixed'
-    mixed_parser = cli_subparsers.add_parser(
+    mixed_parser = subparsers.add_parser(
         "mixed", help="Starts a mixed Hiragana and Katakana training."
     )
     mixed_parser.add_argument(
         "--test",
         action="store_true",
         help="Runs the training in a 5-second test mode.",
+    )
+    mixed_parser.add_argument(
+        "--advanced",
+        action="store_true",
+        help="Includes advanced characters (combination characters/Yōon) in the training.",
     )
     mixed_parser.set_defaults(func=handle_mixed_command)
 

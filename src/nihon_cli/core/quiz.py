@@ -12,6 +12,10 @@ from typing import List
 from nihon_cli.core.character import Character, CharacterType
 from nihon_cli.data.hiragana import HIRAGANA_CHARACTERS
 from nihon_cli.data.katakana import KATAKANA_CHARACTERS
+from nihon_cli.data.hiragana_basic import HIRAGANA_BASIC_CHARACTERS
+from nihon_cli.data.hiragana_advanced import HIRAGANA_ADVANCED_CHARACTERS
+from nihon_cli.data.katakana_basic import KATAKANA_BASIC_CHARACTERS
+from nihon_cli.data.katakana_advanced import KATAKANA_ADVANCED_CHARACTERS
 from nihon_cli.ui.formatting import (
     draw_box,
     format_correct_answer,
@@ -29,25 +33,28 @@ class Quiz:
     user input validation, and providing feedback on answers.
     """
 
-    def __init__(self, character_set: CharacterType) -> None:
+    def __init__(self, character_set: CharacterType, include_advanced: bool = False) -> None:
         """
         Initializes a Quiz instance.
 
         Args:
             character_set (CharacterType): The character set to use, which can be
                                            'hiragana', 'katakana', or 'mixed'.
+            include_advanced (bool): If True, includes advanced characters (combination characters/Yōon).
         """
         self.character_set_name: CharacterType = character_set
-        self.characters: List[Character] = self._load_characters(character_set)
+        self.include_advanced: bool = include_advanced
+        self.characters: List[Character] = self._load_characters(character_set, include_advanced)
         self.correct_answers: int = 0
         self.incorrect_answers: int = 0
 
-    def _load_characters(self, character_set: CharacterType) -> List[Character]:
+    def _load_characters(self, character_set: CharacterType, include_advanced: bool = False) -> List[Character]:
         """
         Loads the specified character set.
 
         Args:
             character_set (CharacterType): The name of the character set to load.
+            include_advanced (bool): If True, includes advanced characters (combination characters/Yōon).
 
         Returns:
             List[Character]: A list of Character objects.
@@ -56,11 +63,21 @@ class Quiz:
             ValueError: If an invalid character set name is provided.
         """
         if character_set == "hiragana":
-            return HIRAGANA_CHARACTERS
+            if include_advanced:
+                return HIRAGANA_BASIC_CHARACTERS + HIRAGANA_ADVANCED_CHARACTERS
+            else:
+                return HIRAGANA_BASIC_CHARACTERS
         elif character_set == "katakana":
-            return KATAKANA_CHARACTERS
+            if include_advanced:
+                return KATAKANA_BASIC_CHARACTERS + KATAKANA_ADVANCED_CHARACTERS
+            else:
+                return KATAKANA_BASIC_CHARACTERS
         elif character_set == "mixed":
-            return HIRAGANA_CHARACTERS + KATAKANA_CHARACTERS
+            if include_advanced:
+                return (HIRAGANA_BASIC_CHARACTERS + HIRAGANA_ADVANCED_CHARACTERS +
+                        KATAKANA_BASIC_CHARACTERS + KATAKANA_ADVANCED_CHARACTERS)
+            else:
+                return HIRAGANA_BASIC_CHARACTERS + KATAKANA_BASIC_CHARACTERS
         else:
             # This case should ideally not be reached if inputs are validated upstream.
             raise ValueError(

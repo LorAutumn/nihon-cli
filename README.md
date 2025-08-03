@@ -6,13 +6,14 @@ A Python-based CLI tool for learning Japanese characters (Hiragana and Katakana)
 
 Nihon CLI is designed to help users learn Japanese characters through interactive quiz sessions with timed intervals. The application uses a spaced repetition approach with 25-minute learning intervals to optimize retention.
 
-## Features (Planned)
+## Features
 
-- **Interactive Quiz Sessions**: Learn Hiragana and Katakana characters through randomized quizzes
-- **Automated Learning Intervals**: 25-minute standard intervals with 5-second test mode
-- **Character Sets**: Support for Hiragana, Katakana, and mixed character sets
-- **Simple CLI Interface**: Easy-to-use command-line interface
-- **No External Dependencies**: Uses only Python standard library
+-   **Interactive Quiz Sessions**: Learn Hiragana and Katakana characters through randomized quizzes
+-   **Automated Learning Intervals**: 25-minute standard intervals with 5-second test mode
+-   **Character Sets**: Support for Hiragana, Katakana, and mixed character sets
+-   **Basic and Advanced Characters**: Choose between basic characters or include advanced combination characters (Yōon)
+-   **Simple CLI Interface**: Easy-to-use command-line interface
+-   **No External Dependencies**: Uses only Python standard library
 
 ## Installation
 
@@ -32,12 +33,14 @@ uvx nihon-cli --help
 #### Development Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd nihon-cli
 ```
 
 2. Install the package in editable mode:
+
 ```bash
 pip install -e .
 ```
@@ -45,6 +48,7 @@ pip install -e .
 #### Production Installation
 
 You can install the package directly from GitHub:
+
 ```bash
 pip install git+https://github.com/your-username/nihon-cli.git
 ```
@@ -57,6 +61,46 @@ To uninstall the package, run the following command:
 pip uninstall nihon-cli
 ```
 
+## Running Locally for Development
+
+When working with the local source code (for development or testing), you need to use the `--from .` flag with `uvx` to run the tool from the current directory instead of looking for a published package.
+
+**Important**: The command `uvx nihon-cli --help` will fail when running from local source because `uvx` tries to find a published package. Use the commands below instead:
+
+```bash
+# Display the main help message
+uvx --from . nihon-cli --help
+
+# Display help for a specific command
+uvx --from . nihon-cli hiragana --help
+
+# Start a Hiragana training session (basic characters only)
+uvx --from . nihon-cli hiragana
+
+# Start a Katakana training session (basic characters only)
+uvx --from . nihon-cli katakana
+
+# Start a mixed Hiragana and Katakana training session (basic characters only)
+uvx --from . nihon-cli mixed
+
+# Start a Hiragana training session with advanced characters (includes combination characters/Yōon)
+uvx --from . nihon-cli hiragana --advanced
+
+# Start a Katakana training session with advanced characters
+uvx --from . nihon-cli katakana --advanced
+
+# Start a mixed training session with advanced characters
+uvx --from . nihon-cli mixed --advanced
+
+# Run a training session in test mode (5-second intervals)
+uvx --from . nihon-cli hiragana --test
+
+# Combine test mode with advanced characters
+uvx --from . nihon-cli hiragana --test --advanced
+```
+
+The `--from .` flag tells `uvx` to install and run the package from the current directory, allowing you to test your local changes without needing to publish the package first.
+
 ## Usage
 
 ### With `uvx`
@@ -67,45 +111,81 @@ You can run all commands by prefixing them with `uvx`:
 # Display the main help message
 uvx nihon-cli --help
 
-# Display help for the training commands
-uvx nihon-cli cli --help
+# Display help for a specific command
+uvx nihon-cli hiragana --help
 
-# Start a Hiragana training session
-uvx nihon-cli cli hiragana
+# Start a Hiragana training session (basic characters only)
+uvx nihon-cli hiragana
 
-# Start a Katakana training session
-uvx nihon-cli cli katakana
+# Start a Katakana training session (basic characters only)
+uvx nihon-cli katakana
 
-# Start a mixed Hiragana and Katakana training session
-uvx nihon-cli cli mixed
+# Start a mixed Hiragana and Katakana training session (basic characters only)
+uvx nihon-cli mixed
+
+# Start a Hiragana training session with advanced characters (includes combination characters/Yōon)
+uvx nihon-cli hiragana --advanced
+
+# Start a Katakana training session with advanced characters
+uvx nihon-cli katakana --advanced
+
+# Start a mixed training session with advanced characters
+uvx nihon-cli mixed --advanced
 
 # Run a training session in test mode (5-second intervals)
-uvx nihon-cli cli hiragana --test
+uvx nihon-cli hiragana --test
+
+# Combine test mode with advanced characters
+uvx nihon-cli hiragana --test --advanced
 ```
 
 ### With `pip`
 
-If you installed the package with `pip`, you can use the `nihon` command directly:
+If you installed the package with `pip`, you can use the `nihon-cli` command directly:
 
 ```bash
 # Display the main help message
-nihon --help
+nihon-cli --help
 
-# Display help for the training commands
-nihon cli --help
+# Display help for a specific command
+nihon-cli hiragana --help
 
-# Start a Hiragana training session
-nihon cli hiragana
+# Start a Hiragana training session (basic characters only)
+nihon-cli hiragana
 
-# Start a Katakana training session
-nihon cli katakana
+# Start a Katakana training session (basic characters only)
+nihon-cli katakana
 
-# Start a mixed Hiragana and Katakana training session
-nihon cli mixed
+# Start a mixed Hiragana and Katakana training session (basic characters only)
+nihon-cli mixed
+
+# Start a Hiragana training session with advanced characters (includes combination characters/Yōon)
+nihon-cli hiragana --advanced
+
+# Start a Katakana training session with advanced characters
+nihon-cli katakana --advanced
+
+# Start a mixed training session with advanced characters
+nihon-cli mixed --advanced
 
 # Run a training session in test mode (5-second intervals)
-nihon cli hiragana --test
+nihon-cli hiragana --test
+
+# Combine test mode with advanced characters
+nihon-cli hiragana --test --advanced
 ```
+
+### Command Options
+
+-   `--test`: Runs the training in a 5-second test mode instead of the standard 25-minute intervals
+-   `--advanced`: Includes advanced characters (combination characters/Yōon) in addition to basic characters
+
+### Character Sets
+
+-   **Basic Characters**: Includes Gojūon (basic syllabary), special characters (ん, っ), and Dakuten/Handakuten characters (が, ざ, だ, ば, ぱ, etc.)
+-   **Advanced Characters**: Includes combination characters (Yōon) such as きゃ, しゅ, ちょ, etc.
+
+By default, only basic characters are included. Use the `--advanced` flag to include combination characters for a more comprehensive learning experience.
 
 ## Project Structure
 
@@ -115,6 +195,7 @@ nihon-cli/
 │   ├── nihon_cli/
 │   │   ├── __init__.py
 │   │   ├── main.py              # CLI Entry Point
+│   │   ├── app.py               # Main Application Logic
 │   │   ├── core/
 │   │   │   ├── __init__.py
 │   │   │   ├── character.py     # Character Domain Model
@@ -122,26 +203,33 @@ nihon-cli/
 │   │   │   └── timer.py         # Learning Timer
 │   │   ├── data/
 │   │   │   ├── __init__.py
-│   │   │   ├── hiragana.py      # Hiragana Character Data
-│   │   │   └── katakana.py      # Katakana Character Data
-│   │   └── cli/
-│   │       ├── __init__.py
-│   │       └── commands.py      # CLI Command Handler
+│   │   │   ├── hiragana.py      # Complete Hiragana Character Data
+│   │   │   ├── hiragana_basic.py    # Basic Hiragana Characters
+│   │   │   ├── hiragana_advanced.py # Advanced Hiragana Characters (Yōon)
+│   │   │   ├── katakana.py      # Complete Katakana Character Data
+│   │   │   ├── katakana_basic.py    # Basic Katakana Characters
+│   │   │   └── katakana_advanced.py # Advanced Katakana Characters (Yōon)
+│   │   ├── cli/
+│   │   │   ├── __init__.py
+│   │   │   └── commands.py      # CLI Command Handler
+│   │   └── ui/
+│   │       └── formatting.py   # UI Formatting Utilities
 ├── tests/
-├── setup.py
+├── pyproject.toml
 └── README.md
 ```
 
 ## Development Status
 
-**Current Phase: 5.2 - Entry Points and Installation**
+**Current Phase: Completed - Full Feature Implementation**
 
-- ✅ Project structure created
-- ✅ Setup.py configured for CLI installation
-- ✅ Core functionality implemented
-- ✅ CLI interface finalized
-- ✅ Entry points and installation finalized
-- ⏳ Final testing and refinement (upcoming)
+-   ✅ Project structure created
+-   ✅ Core functionality implemented
+-   ✅ CLI interface with direct command structure
+-   ✅ Basic and advanced character support
+-   ✅ Entry points and installation configured
+-   ✅ Character data restructured for flexibility
+-   ✅ Advanced mode implementation completed
 
 ## Development Phases
 
@@ -154,17 +242,17 @@ nihon-cli/
 
 ## Requirements
 
-- Python 3.8 or higher
-- No external dependencies (uses only standard library)
+-   Python 3.8 or higher
+-   No external dependencies (uses only standard library)
 
 ## Contributing
 
 This project follows Python best practices:
 
-- **PEP 8**: Python style guide compliance
-- **Type Hints**: For better code clarity
-- **Docstrings**: Comprehensive documentation
-- **Domain-Driven Design**: Clean, modular architecture
+-   **PEP 8**: Python style guide compliance
+-   **Type Hints**: For better code clarity
+-   **Docstrings**: Comprehensive documentation
+-   **Domain-Driven Design**: Clean, modular architecture
 
 ## License
 
@@ -172,14 +260,14 @@ MIT License (to be added)
 
 ## Roadmap
 
-- [x] Complete core functionality implementation
-- [x] Add comprehensive character datasets
-- [x] Implement quiz and timer systems
-- [x] Add CLI command handling
-- [ ] Create automated tests
-- [ ] Add progress tracking features
-- [ ] Implement advanced learning algorithms
+-   [x] Complete core functionality implementation
+-   [x] Add comprehensive character datasets
+-   [x] Implement quiz and timer systems
+-   [x] Add CLI command handling
+-   [ ] Create automated tests
+-   [ ] Add progress tracking features
+-   [ ] Implement advanced learning algorithms
 
 ---
 
-*This project is currently in early development. Core functionality will be implemented in upcoming phases.*
+_This project is currently in early development. Core functionality will be implemented in upcoming phases._
