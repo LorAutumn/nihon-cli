@@ -54,9 +54,10 @@ class NihonCli:
         necessary components and handles the session flow.
 
         Args:
-            character_set (str): The character set for the quiz ('hiragana', 'katakana', 'mixed').
+            character_set (str): The character set for the quiz ('hiragana', 'katakana', 'mixed', 'words').
             test_mode (bool): If True, runs in a short test mode (5s timer).
             advanced_mode (bool): If True, includes advanced characters (combination characters/Yōon).
+                                 Note: For 'words', this parameter is ignored as all words are always included.
         """
         try:
             self._setup_components(character_set, test_mode, advanced_mode)
@@ -121,6 +122,7 @@ class NihonCli:
             "hiragana": "Hiragana",
             "katakana": "Katakana",
             "mixed": "Hiragana & Katakana",
+            "words": "Japanese Vocabulary",
         }.get(self.quiz.character_set_name, "Unknown")
 
         print(f"Welcome to the {mode_name} training!")

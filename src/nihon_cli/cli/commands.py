@@ -46,6 +46,18 @@ def handle_mixed_command(args: argparse.Namespace) -> None:
     cli_app.run_training_session("mixed", args.test, args.advanced)
 
 
+def handle_words_command(args: argparse.Namespace) -> None:
+    """
+    Handler for the words training command.
+
+    Args:
+        args (argparse.Namespace): The parsed command-line arguments.
+                                   Expected to have 'test' attribute.
+    """
+    cli_app = NihonCli()
+    cli_app.run_training_session("words", args.test)
+
+
 def setup_argument_parser() -> argparse.ArgumentParser:
     """
     Creates and configures the argument parser for the CLI.
@@ -114,6 +126,17 @@ def setup_argument_parser() -> argparse.ArgumentParser:
         help="Includes advanced characters (combination characters/Yōon) in the training.",
     )
     mixed_parser.set_defaults(func=handle_mixed_command)
+
+    # Subparser for 'words'
+    words_parser = subparsers.add_parser(
+        "words", help="Starts a Japanese vocabulary training."
+    )
+    words_parser.add_argument(
+        "--test",
+        action="store_true",
+        help="Runs the training in a 5-second test mode.",
+    )
+    words_parser.set_defaults(func=handle_words_command)
 
     return parser
 

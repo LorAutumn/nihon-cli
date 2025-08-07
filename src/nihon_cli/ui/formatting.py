@@ -82,8 +82,60 @@ def format_correct_answer(text="Richtig!"):
     """
     return f"{COLOR_GREEN}✅ {text}{COLOR_RESET}"
 
-def format_incorrect_answer(user_answer, correct_answer):
+def format_incorrect_answer(user_answer, correct_answer, character=None):
     """
     Formats an incorrect answer with a red cross emoji and shows the correct answer.
+    For character quiz, shows the new format with user input converted to kana.
     """
-    return f"{COLOR_RED}❌ Falsch! Die richtige Antwort ist: {correct_answer}{COLOR_RESET}"
+    if character is not None:
+        # New format for character quiz
+        from nihon_cli.core.romaji_converter import _converter
+        
+        # Convert user's romaji input to kana if possible (use word conversion for better results)
+        user_kana = _converter.convert_word_to_kana(user_answer, prefer_hiragana=(character.character_type == "hiragana"))
+        user_kana_display = f" ({user_kana})" if user_kana else ""
+        
+        # Improved format with better spacing and structure
+        user_line = f"Antwort: {user_answer}{user_kana_display}"
+        correct_line = f"Lösung:  {character.romaji} ({character.symbol})"
+        feedback_line = f"{COLOR_RED}❌ Falsch!{COLOR_RESET}"
+        
+        return f"{user_line}\n{correct_line}\n{feedback_line}"
+    else:
+        # Fallback to old format
+        return f"{COLOR_RED}❌ Falsch! Die richtige Antwort ist: {correct_answer}{COLOR_RESET}"
+
+
+def format_word_correct_answer(word):
+    """
+    Formats a correct word answer with Japanese, romaji, and German translation.
+    Format: "Antwort: [japanese] ([romaji]) ( [german] ) \n ✅ Richtig!"
+    """
+    from nihon_cli.core.word import Word
+    if isinstance(word, Word):
+        answer_line = f"Antwort: {word.japanese} ({word.romaji}) ( {word.german} )"
+        feedback_line = f"{COLOR_GREEN}✅ Richtig!{COLOR_RESET}"
+        return f"{answer_line}\n{feedback_line}"
+    else:
+        return format_correct_answer()
+
+
+def format_word_incorrect_answer(user_answer, word):
+    """
+    Formats an incorrect word answer with the new format.
+    Format: "Antwort: <user_input> (<kana_if_romaji>) \n Lösung: <romaji> (<japanese>) (<german>) \n ❌ Falsch!"
+    """
+    from nihon_cli.core.word import Word
+    if isinstance(word, Word):
+        # Try to convert user's romaji input to kana if possible (only if not in word DB)
+        from nihon_cli.core.romaji_converter import _converter
+        user_kana = _converter.convert_word_to_kana_safe(user_answer, prefer_hiragana=True)
+        user_kana_display = f" ({user_kana})" if user_kana else ""
+        
+        # New format for word quiz with improved spacing
+        user_line = f"Antwort: {user_answer}{user_kana_display}"
+        correct_line = f"Lösung:  {word.romaji} ({word.japanese}) ({word.german})"
+        feedback_line = f"{COLOR_RED}❌ Falsch!{COLOR_RESET}"
+        return f"{user_line}\n{correct_line}\n{feedback_line}"
+    else:
+        return format_incorrect_answer(user_answer, "Unknown")

@@ -7,21 +7,23 @@ including character selection, user input validation, and session feedback.
 """
 
 import random
-from typing import List
+from typing import List, Union
 
 from nihon_cli.core.character import Character, CharacterType
-from nihon_cli.data.hiragana import HIRAGANA_CHARACTERS
-from nihon_cli.data.katakana import KATAKANA_CHARACTERS
+from nihon_cli.core.word import Word
 from nihon_cli.data.hiragana_basic import HIRAGANA_BASIC_CHARACTERS
 from nihon_cli.data.hiragana_advanced import HIRAGANA_ADVANCED_CHARACTERS
 from nihon_cli.data.katakana_basic import KATAKANA_BASIC_CHARACTERS
 from nihon_cli.data.katakana_advanced import KATAKANA_ADVANCED_CHARACTERS
+from nihon_cli.data.words import get_words
 from nihon_cli.ui.formatting import (
     draw_box,
     format_correct_answer,
     format_incorrect_answer,
     format_question,
     format_quiz_session,
+    format_word_correct_answer,
+    format_word_incorrect_answer,
 )
 
 
@@ -33,31 +35,33 @@ class Quiz:
     user input validation, and providing feedback on answers.
     """
 
-    def __init__(self, character_set: CharacterType, include_advanced: bool = False) -> None:
+    def __init__(self, character_set: str, include_advanced: bool = False) -> None:
         """
         Initializes a Quiz instance.
 
         Args:
-            character_set (CharacterType): The character set to use, which can be
-                                           'hiragana', 'katakana', or 'mixed'.
+            character_set (str): The character set to use, which can be
+                                'hiragana', 'katakana', 'mixed', or 'words'.
             include_advanced (bool): If True, includes advanced characters (combination characters/Yōon).
+                                    For 'words', this parameter is ignored as all words are always included.
         """
-        self.character_set_name: CharacterType = character_set
+        self.character_set_name: str = character_set
         self.include_advanced: bool = include_advanced
-        self.characters: List[Character] = self._load_characters(character_set, include_advanced)
+        self.items: List[Union[Character, Word]] = self._load_items(character_set, include_advanced)
         self.correct_answers: int = 0
         self.incorrect_answers: int = 0
 
-    def _load_characters(self, character_set: CharacterType, include_advanced: bool = False) -> List[Character]:
+    def _load_items(self, character_set: str, include_advanced: bool = False) -> List[Union[Character, Word]]:
         """
-        Loads the specified character set.
+        Loads the specified character set or word set.
 
         Args:
-            character_set (CharacterType): The name of the character set to load.
+            character_set (str): The name of the character set to load.
             include_advanced (bool): If True, includes advanced characters (combination characters/Yōon).
+                                    For 'words', this parameter is ignored as all words are always included.
 
         Returns:
-            List[Character]: A list of Character objects.
+            List[Union[Character, Word]]: A list of Character or Word objects.
 
         Raises:
             ValueError: If an invalid character set name is provided.
@@ -78,26 +82,37 @@ class Quiz:
                         KATAKANA_BASIC_CHARACTERS + KATAKANA_ADVANCED_CHARACTERS)
             else:
                 return HIRAGANA_BASIC_CHARACTERS + KATAKANA_BASIC_CHARACTERS
+        elif character_set == "words":
+            return self._load_words()
         else:
             # This case should ideally not be reached if inputs are validated upstream.
             raise ValueError(
-                "Invalid character set. Choose 'hiragana', 'katakana', or 'mixed'."
+                "Invalid character set. Choose 'hiragana', 'katakana', 'mixed', or 'words'."
             )
 
-    def _select_questions(self, count: int = 10) -> List[Character]:
+    def _load_words(self) -> List[Word]:
         """
-        Selects a random subset of characters for the quiz.
+        Loads all Japanese vocabulary words (basic + advanced combined).
+
+        Returns:
+            List[Word]: A list of all Word objects.
+        """
+        return get_words(include_advanced=True)  # Always load all words
+
+    def _select_questions(self, count: int = 10) -> List[Union[Character, Word]]:
+        """
+        Selects a random subset of characters or words for the quiz.
 
         This method prevents errors by ensuring the number of requested
-        questions does not exceed the number of available characters.
+        questions does not exceed the number of available items.
 
         Args:
             count (int): The desired number of questions. Defaults to 10.
 
         Returns:
-            List[Character]: A list of characters to be used as questions.
+            List[Union[Character, Word]]: A list of characters or words to be used as questions.
         """
-        return random.sample(self.characters, min(count, len(self.characters)))
+        return random.sample(self.items, min(count, len(self.items)))
 
     def run_session(self) -> None:
         """
@@ -113,13 +128,13 @@ class Quiz:
         self.correct_answers = 0
         self.incorrect_answers = 0
 
-        for i, character in enumerate(questions, 1):
-            self.ask_question(character, i, len(questions))
+        for i, item in enumerate(questions, 1):
+            self.ask_question(item, i, len(questions))
 
         print("\n")
         print(draw_box(self.get_session_results(), title="Session-Zusammenfassung"))
 
-    def ask_question(self, character: Character, question_number: int, total_questions: int) -> bool:
+    def ask_question(self, item: Union[Character, Word], question_number: int, total_questions: int) -> bool:
         """
         Asks a single question, validates the answer, and provides feedback.
 
@@ -127,26 +142,43 @@ class Quiz:
         lowercase to ensure a fair comparison.
 
         Args:
-            character (Character): The character to ask the user about.
+            item (Union[Character, Word]): The character or word to ask the user about.
             question_number (int): The current question number.
             total_questions (int): The total number of questions in the quiz.
 
         Returns:
             bool: True if the answer was correct, False otherwise.
         """
-        question_text = f"Was ist das Romaji für '{character.symbol}'?"
-        print("\n" + format_question(question_text, question_number, total_questions))
-        
-        user_input = input("Antwort: ").strip().lower()
+        if isinstance(item, Character):
+            question_text = f"Was ist das Romaji für '{item.symbol}'?"
+            print("\n" + format_question(question_text, question_number, total_questions))
+            
+            user_input = input("> ").strip().lower()
 
-        if user_input == character.romaji:
-            print(format_correct_answer())
-            self.correct_answers += 1
-            return True
+            if user_input == item.romaji:
+                print(format_correct_answer())
+                self.correct_answers += 1
+                return True
+            else:
+                print(format_incorrect_answer(user_input, item.romaji, character=item))
+                self.incorrect_answers += 1
+                return False
+        elif isinstance(item, Word):
+            question_text = f"Was ist das Romaji für '{item.japanese}'?"
+            print("\n" + format_question(question_text, question_number, total_questions))
+            
+            user_input = input("> ").strip().lower()
+
+            if user_input == item.romaji.lower():
+                print(format_word_correct_answer(item))
+                self.correct_answers += 1
+                return True
+            else:
+                print(format_word_incorrect_answer(user_input, item))
+                self.incorrect_answers += 1
+                return False
         else:
-            print(format_incorrect_answer(user_input, character.romaji))
-            self.incorrect_answers += 1
-            return False
+            raise ValueError(f"Unsupported item type: {type(item)}")
 
     def get_session_results(self) -> str:
         """
