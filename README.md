@@ -175,10 +175,85 @@ nihon-cli hiragana --test
 nihon-cli hiragana --test --advanced
 ```
 
-### Command Options
+## Available Commands
+
+This section provides a complete reference of all available `uvx` commands and their functionality.
+
+### Core Training Commands
+
+#### `hiragana`
+
+Starts a pure Hiragana character training session.
+
+```bash
+# Basic usage
+uvx nihon-cli hiragana
+
+# With options
+uvx nihon-cli hiragana --test --advanced
+```
+
+**Available Options:**
+
+-   `--test`: Run in 5-second test mode
+-   `--advanced`: Include advanced combination characters (Yōon)
+
+#### `katakana`
+
+Starts a pure Katakana character training session.
+
+```bash
+# Basic usage
+uvx nihon-cli katakana
+
+# With options
+uvx nihon-cli katakana --test --advanced
+```
+
+**Available Options:**
+
+-   `--test`: Run in 5-second test mode
+-   `--advanced`: Include advanced combination characters (Yōon)
+
+#### `mixed`
+
+Starts a mixed Hiragana and Katakana character training session.
+
+```bash
+# Basic usage
+uvx nihon-cli mixed
+
+# With options
+uvx nihon-cli mixed --test --advanced
+```
+
+**Available Options:**
+
+-   `--test`: Run in 5-second test mode
+-   `--advanced`: Include advanced combination characters (Yōon)
+
+#### `words`
+
+Starts a Japanese vocabulary training session.
+
+```bash
+# Basic usage
+uvx nihon-cli words
+
+# With test mode
+uvx nihon-cli words --test
+```
+
+**Available Options:**
+
+-   `--test`: Run in 5-second test mode
+
+**Note:** The `--advanced` option is not available for the `words` command as all vocabulary is included by default.
+
+### Command Options Reference
 
 -   `--test`: Runs the training in a 5-second test mode instead of the standard 25-minute intervals
--   `--advanced`: Includes advanced characters (combination characters/Yōon) in addition to basic characters
+-   `--advanced`: Includes advanced characters (combination characters/Yōon) in addition to basic characters (available for `hiragana`, `katakana`, and `mixed` commands only)
 
 ### Character Sets
 

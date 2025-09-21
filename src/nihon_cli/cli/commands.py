@@ -71,7 +71,7 @@ def setup_argument_parser() -> argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(
         prog="nihon-cli",
-        description="Nihon CLI is a tool to learn Japanese characters.",
+        description="A Python-based CLI tool for learning Japanese characters (Hiragana and Katakana) with automated learning intervals.",
         epilog="Use 'nihon-cli <command> --help' for more information on a specific command.",
     )
 
@@ -81,60 +81,60 @@ def setup_argument_parser() -> argparse.ArgumentParser:
 
     # Subparser for 'hiragana'
     hiragana_parser = subparsers.add_parser(
-        "hiragana", help="Starts a pure Hiragana training."
+        "hiragana", help="Start a Hiragana character training session"
     )
     hiragana_parser.add_argument(
         "--test",
         action="store_true",
-        help="Runs the training in a 5-second test mode.",
+        help="Run in 5-second test mode instead of the standard 25-minute intervals",
     )
     hiragana_parser.add_argument(
         "--advanced",
         action="store_true",
-        help="Includes advanced characters (combination characters/Yōon) in the training.",
+        help="Include advanced combination characters (Yōon) in addition to basic characters",
     )
     hiragana_parser.set_defaults(func=handle_hiragana_command)
 
     # Subparser for 'katakana'
     katakana_parser = subparsers.add_parser(
-        "katakana", help="Starts a pure Katakana training."
+        "katakana", help="Start a Katakana character training session"
     )
     katakana_parser.add_argument(
         "--test",
         action="store_true",
-        help="Runs the training in a 5-second test mode.",
+        help="Run in 5-second test mode instead of the standard 25-minute intervals",
     )
     katakana_parser.add_argument(
         "--advanced",
         action="store_true",
-        help="Includes advanced characters (combination characters/Yōon) in the training.",
+        help="Include advanced combination characters (Yōon) in addition to basic characters",
     )
     katakana_parser.set_defaults(func=handle_katakana_command)
 
     # Subparser for 'mixed'
     mixed_parser = subparsers.add_parser(
-        "mixed", help="Starts a mixed Hiragana and Katakana training."
+        "mixed", help="Start a mixed Hiragana and Katakana character training session"
     )
     mixed_parser.add_argument(
         "--test",
         action="store_true",
-        help="Runs the training in a 5-second test mode.",
+        help="Run in 5-second test mode instead of the standard 25-minute intervals",
     )
     mixed_parser.add_argument(
         "--advanced",
         action="store_true",
-        help="Includes advanced characters (combination characters/Yōon) in the training.",
+        help="Include advanced combination characters (Yōon) in addition to basic characters",
     )
     mixed_parser.set_defaults(func=handle_mixed_command)
 
     # Subparser for 'words'
     words_parser = subparsers.add_parser(
-        "words", help="Starts a Japanese vocabulary training."
+        "words", help="Start a Japanese vocabulary training session"
     )
     words_parser.add_argument(
         "--test",
         action="store_true",
-        help="Runs the training in a 5-second test mode.",
+        help="Run in 5-second test mode instead of the standard 25-minute intervals",
     )
     words_parser.set_defaults(func=handle_words_command)
 
