@@ -7,6 +7,7 @@ import logging
 import sys
 
 from nihon_cli.cli.commands import parse_and_execute
+from nihon_cli.infra import init_db
 
 
 def main() -> None:
@@ -17,6 +18,9 @@ def main() -> None:
     to ensure the application exits gracefully.
     """
     try:
+        # Initialize the vocabulary database on startup
+        init_db()
+        
         parse_and_execute()
     except Exception as e:
         logging.critical(f"A critical unhandled error occurred: {e}", exc_info=True)

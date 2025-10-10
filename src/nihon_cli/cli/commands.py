@@ -58,6 +58,87 @@ def handle_words_command(args: argparse.Namespace) -> None:
     cli_app.run_training_session("words", args.test)
 
 
+def handle_vocab_upload_command(args: argparse.Namespace) -> None:
+    """
+    Handler for the 'vocab upload' command.
+    
+    Parses a Markdown file containing vocabulary tables and imports
+    the vocabulary items into the database.
+    
+    Args:
+        args (argparse.Namespace): The parsed command-line arguments.
+                                   Expected to have 'file' and 'tag' attributes.
+    """
+    from pathlib import Path
+    from nihon_cli.core.parser import MarkdownVocabParser
+    from nihon_cli.infra.repository import VocabRepository
+    
+    file_path = Path(args.file)
+    upload_tag = args.tag or file_path.stem
+    
+    try:
+        # Parse the Markdown file
+        parser = MarkdownVocabParser()
+        items = parser.parse(file_path)
+        
+        # Update items with the upload tag
+        for item in items:
+            item.upload_tag = upload_tag
+        
+        # Insert into database
+        repo = VocabRepository()
+        inserted, skipped = repo.add_vocabulary_batch(
+            items,
+            file_path.name,
+            upload_tag
+        )
+        
+        # Display results
+        print(f"✓ {inserted} Vokabeln erfolgreich importiert!")
+        if skipped > 0:
+            print(f"  ({skipped} Duplikate übersprungen)")
+        
+    except FileNotFoundError as e:
+        print(f"✗ Fehler: Datei nicht gefunden - {e}")
+        sys.exit(1)
+    except ValueError as e:
+        print(f"✗ Fehler: Ungültiges Format - {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"✗ Unerwarteter Fehler: {e}")
+        sys.exit(1)
+
+
+def handle_vocab_learn_command(args: argparse.Namespace) -> None:
+    """
+    Handler for the 'vocab learn' command.
+    
+    Starts an interactive vocabulary learning session with adaptive
+    query direction based on learning progress.
+    
+    Args:
+        args (argparse.Namespace): The parsed command-line arguments.
+                                   Expected to have 'limit' attribute.
+    """
+    from nihon_cli.core.quiz_vocab import VocabQuiz
+    from nihon_cli.infra.repository import VocabRepository
+    
+    try:
+        # Initialize repository and quiz engine
+        repository = VocabRepository()
+        quiz = VocabQuiz(repository)
+        
+        # Start learning session
+        quiz.start_session(limit=args.limit)
+        
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Lernsitzung abgebrochen.")
+        sys.exit(0)
+    except Exception as e:
+        print(f"✗ Unerwarteter Fehler: {e}")
+        sys.exit(1)
+
+
 def setup_argument_parser() -> argparse.ArgumentParser:
     """
     Creates and configures the argument parser for the CLI.
@@ -137,6 +218,44 @@ def setup_argument_parser() -> argparse.ArgumentParser:
         help="Run in 5-second test mode instead of the standard 25-minute intervals",
     )
     words_parser.set_defaults(func=handle_words_command)
+
+    # Subparser for 'vocab'
+    vocab_parser = subparsers.add_parser(
+        "vocab", help="Vocabulary learning and management"
+    )
+    vocab_subparsers = vocab_parser.add_subparsers(
+        dest="vocab_command", help="Vocabulary sub-commands"
+    )
+
+    # vocab upload subcommand
+    upload_parser = vocab_subparsers.add_parser(
+        "upload",
+        help="Upload vocabulary from a Markdown file"
+    )
+    upload_parser.add_argument(
+        "file",
+        type=str,
+        help="Path to the Markdown file containing vocabulary table"
+    )
+    upload_parser.add_argument(
+        "--tag",
+        type=str,
+        help="Optional tag for this upload (default: filename without extension)"
+    )
+    upload_parser.set_defaults(func=handle_vocab_upload_command)
+
+    # vocab learn subcommand
+    learn_parser = vocab_subparsers.add_parser(
+        "learn",
+        help="Start an interactive vocabulary learning session"
+    )
+    learn_parser.add_argument(
+        "--limit",
+        type=int,
+        default=15,
+        help="Number of vocabulary items per session (default: 15)"
+    )
+    learn_parser.set_defaults(func=handle_vocab_learn_command)
 
     return parser
 
