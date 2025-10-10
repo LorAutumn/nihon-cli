@@ -8,6 +8,7 @@ import sys
 from typing import List, Optional
 
 from nihon_cli.app import NihonCli
+from nihon_cli.infra.config import save_config
 
 
 def handle_hiragana_command(args: argparse.Namespace) -> None:
@@ -139,6 +140,24 @@ def handle_vocab_learn_command(args: argparse.Namespace) -> None:
         sys.exit(1)
 
 
+def handle_config_set_command(key: str, value: str) -> None:
+    """
+    Handler for the 'config set' command.
+    
+    Saves a configuration key-value pair to the config file.
+    
+    Args:
+        key: The configuration key to set
+        value: The configuration value to set
+    """
+    try:
+        save_config(key, value)
+        print(f"✓ Konfiguration gespeichert: {key} = {value}")
+    except Exception as e:
+        print(f"✗ Fehler beim Speichern der Konfiguration: {e}")
+        sys.exit(1)
+
+
 def setup_argument_parser() -> argparse.ArgumentParser:
     """
     Creates and configures the argument parser for the CLI.
@@ -256,6 +275,31 @@ def setup_argument_parser() -> argparse.ArgumentParser:
         help="Number of vocabulary items per session (default: 15)"
     )
     learn_parser.set_defaults(func=handle_vocab_learn_command)
+
+    # Subparser for 'config'
+    config_parser = subparsers.add_parser(
+        "config", help="Configuration management"
+    )
+    config_subparsers = config_parser.add_subparsers(
+        dest="config_command", help="Configuration sub-commands"
+    )
+
+    # config set subcommand
+    set_parser = config_subparsers.add_parser(
+        "set",
+        help="Set a configuration value"
+    )
+    set_parser.add_argument(
+        "key",
+        type=str,
+        help="Configuration key to set"
+    )
+    set_parser.add_argument(
+        "value",
+        type=str,
+        help="Configuration value to set"
+    )
+    set_parser.set_defaults(func=lambda args: handle_config_set_command(args.key, args.value))
 
     return parser
 

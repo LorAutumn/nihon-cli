@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2025-10-10
+
+### ✨ Feature
+
+-   **Persistente Konfiguration**: Es wurde eine persistente Konfiguration für den Pfad der Vokabeldatenbank hinzugefügt
+-   **CLI-Befehl**: Ein neuer CLI-Befehl `nihon-cli config set db_path <PFAD>` wurde implementiert, um den Datenbankpfad zu setzen
+
+### 🐛 Fixed
+
+-   **Abhängigkeiten**: Ein `ModuleNotFoundError` wurde behoben, indem die Abhängigkeiten `tomli` und `tomli_w` zur [`pyproject.toml`](pyproject.toml:1) hinzugefügt wurden
+
 ## [1.2.1] - 2025-10-10
 
 ### 🔧 Verbessert

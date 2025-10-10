@@ -6,17 +6,16 @@ storing vocabulary items and their learning progress.
 
 import sqlite3
 from pathlib import Path
-from typing import Optional
+
+from nihon_cli.infra.config import load_config
 
 
-def init_db(db_path: Optional[str] = None) -> Path:
+def init_db() -> Path:
     """Initialize the vocabulary database.
     
     Creates the SQLite database at ~/.nihon-cli/vocab.db if it doesn't exist.
     Also creates the vocabulary table with the required schema and indexes.
-    
-    Args:
-        db_path: Optional custom database path. If None, uses ~/.nihon-cli/vocab.db
+    Loads the database path from the configuration file if available.
         
     Returns:
         Path: The path to the initialized database file
@@ -24,14 +23,17 @@ def init_db(db_path: Optional[str] = None) -> Path:
     Raises:
         sqlite3.Error: If database creation or schema setup fails
     """
+    # Try to load database path from config
+    config_db_path = load_config('db_path')
+    
     # Determine database location
-    if db_path is None:
+    if config_db_path is not None:
+        db_path = Path(config_db_path)
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+    else:
         db_dir = Path.home() / ".nihon-cli"
         db_dir.mkdir(parents=True, exist_ok=True)
         db_path = db_dir / "vocab.db"
-    else:
-        db_path = Path(db_path)
-        db_path.parent.mkdir(parents=True, exist_ok=True)
     
     # Connect to database (creates file if it doesn't exist)
     conn = sqlite3.connect(db_path)

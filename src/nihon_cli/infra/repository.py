@@ -20,13 +20,13 @@ class VocabRepository:
     batch inserts with duplicate detection and transaction management.
     """
     
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self):
         """Initialize the repository with a database connection.
         
-        Args:
-            db_path: Optional custom database path. If None, uses default location
+        The database path is loaded from the configuration file if available,
+        otherwise the default location ~/.nihon-cli/vocab.db is used.
         """
-        self.db_path = init_db(db_path)
+        self.db_path = init_db()
     
     @contextmanager
     def _get_connection(self):
