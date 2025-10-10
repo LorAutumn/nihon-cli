@@ -9,6 +9,7 @@ from typing import List, Optional
 
 from nihon_cli.core.vocabulary import VocabularyItem
 from nihon_cli.infra.repository import VocabRepository
+from nihon_cli.ui.formatting import draw_box, COLOR_GREEN, COLOR_RED, COLOR_RESET
 
 
 class VocabQuiz:
@@ -64,10 +65,11 @@ class VocabQuiz:
         }
         
         # Display session header
-        print("\n" + "=" * 60)
-        print(f"📚 Vokabel-Lernsitzung gestartet")
-        print(f"   {len(self.current_session)} Vokabeln geladen")
-        print("=" * 60)
+        session_info = (
+            f"Typ: Vokabeltraining\n"
+            f"Vokabeln: {len(self.current_session)}"
+        )
+        print("\n" + draw_box(session_info, title="📚 Vokabel-Lernsitzung"))
         
         # Run the quiz loop
         self._run_quiz_loop()
@@ -110,10 +112,10 @@ class VocabQuiz:
             print()  # Empty line for spacing
     
     def _display_question(
-        self, 
-        item: VocabularyItem, 
-        current: int, 
-        total: int, 
+        self,
+        item: VocabularyItem,
+        current: int,
+        total: int,
         direction: str
     ) -> None:
         """Display a vocabulary question to the user.
@@ -126,14 +128,15 @@ class VocabQuiz:
         """
         direction_symbol = "🇯🇵 → 🇩🇪" if direction == "jp_to_de" else "🇩🇪 → 🇯🇵"
         
-        print(f"\n[{current}/{total}] {direction_symbol}")
-        
         if direction == "jp_to_de":
             question_text = ", ".join(item.japanese_vocab)
-            print(f"Was bedeutet '{question_text}'?")
+            content = f"{direction_symbol}\n\nWas bedeutet '{question_text}'?"
         else:
             question_text = ", ".join(item.german_vocab)
-            print(f"Wie sagt man '{question_text}' auf Japanisch?")
+            content = f"{direction_symbol}\n\nWie sagt man '{question_text}' auf Japanisch?"
+        
+        title = f"Frage {current}/{total}"
+        print("\n" + draw_box(content, title=title))
     
     def _check_answer(self, user_input: str, correct_answers: List[str]) -> bool:
         """Check if the user's answer is correct.
@@ -188,9 +191,9 @@ class VocabQuiz:
             self.session_stats['incorrect'] += 1
     
     def _display_feedback(
-        self, 
-        is_correct: bool, 
-        user_answer: str, 
+        self,
+        is_correct: bool,
+        user_answer: str,
         correct_answers: List[str],
         item: VocabularyItem
     ) -> None:
@@ -203,16 +206,18 @@ class VocabQuiz:
             item: The vocabulary item
         """
         if is_correct:
-            print(f"✓ Richtig!")
+            feedback = f"{COLOR_GREEN}✅ Richtig!{COLOR_RESET}"
             if item.completed:
-                print(f"🎉 Vokabel abgeschlossen!")
+                feedback += f"\n{COLOR_GREEN}🎉 Vokabel abgeschlossen!{COLOR_RESET}"
             else:
-                print(f"   Fortschritt: DE {item.correct_german}/5 | JP {item.correct_japanese}/5")
+                feedback += f"\n\nFortschritt: DE {item.correct_german}/5 | JP {item.correct_japanese}/5"
+            print(feedback)
         else:
-            print(f"✗ Falsch!")
-            print(f"   Deine Antwort: {user_answer}")
             answers_str = ", ".join(correct_answers)
-            print(f"   Korrekt wäre: {answers_str}")
+            user_line = f"Antwort: {user_answer}"
+            correct_line = f"Lösung:  {answers_str}"
+            feedback_line = f"{COLOR_RED}❌ Falsch!{COLOR_RESET}"
+            print(f"{user_line}\n{correct_line}\n{feedback_line}")
     
     def _display_summary(self) -> None:
         """Display a summary of the learning session."""
@@ -223,11 +228,11 @@ class VocabQuiz:
         
         accuracy = (self.session_stats['correct'] / total * 100)
         
-        print("\n" + "=" * 60)
-        print("📊 Sitzungs-Zusammenfassung")
-        print("=" * 60)
-        print(f"Richtig:              {self.session_stats['correct']}")
-        print(f"Falsch:               {self.session_stats['incorrect']}")
-        print(f"Genauigkeit:          {accuracy:.1f}%")
-        print(f"Abgeschlossene:       {self.session_stats['completed_items']}")
-        print("=" * 60)
+        summary_content = (
+            f"Richtig:        {COLOR_GREEN}{self.session_stats['correct']}{COLOR_RESET}\n"
+            f"Falsch:         {COLOR_RED}{self.session_stats['incorrect']}{COLOR_RESET}\n"
+            f"Genauigkeit:    {accuracy:.1f}%\n"
+            f"Abgeschlossen:  {COLOR_GREEN}{self.session_stats['completed_items']}{COLOR_RESET} 🎉"
+        )
+        
+        print("\n" + draw_box(summary_content, title="📊 Sitzungs-Zusammenfassung"))
