@@ -115,13 +115,14 @@ def handle_vocab_learn_command(args: argparse.Namespace) -> None:
     Handler for the 'vocab learn' command.
     
     Starts an interactive vocabulary learning session with adaptive
-    query direction based on learning progress.
+    query direction based on learning progress and timer-based intervals.
     
     Args:
         args (argparse.Namespace): The parsed command-line arguments.
-                                   Expected to have 'limit' attribute.
+                                   Expected to have 'limit' and 'test' attributes.
     """
     from nihon_cli.core.quiz_vocab import VocabQuiz
+    from nihon_cli.core.timer import LearningTimer
     from nihon_cli.infra.repository import VocabRepository
     
     try:
@@ -129,8 +130,22 @@ def handle_vocab_learn_command(args: argparse.Namespace) -> None:
         repository = VocabRepository()
         quiz = VocabQuiz(repository)
         
-        # Start learning session
-        quiz.start_session(limit=args.limit)
+        # Determine timer interval based on test mode
+        interval_seconds = 5 if args.test else 1500
+        
+        # Start endless loop with timer
+        while True:
+            # Run quiz session
+            questions_asked = quiz.run_session(limit=args.limit)
+            
+            # Only start timer if questions were actually asked
+            if questions_asked > 0:
+                # Initialize timer for next session
+                timer = LearningTimer(interval_seconds)
+                timer.wait_for_next_session()
+            else:
+                # No questions available, exit loop
+                break
         
     except KeyboardInterrupt:
         print("\n\n⚠️  Lernsitzung abgebrochen.")
@@ -273,6 +288,11 @@ def setup_argument_parser() -> argparse.ArgumentParser:
         type=int,
         default=15,
         help="Number of vocabulary items per session (default: 15)"
+    )
+    learn_parser.add_argument(
+        "--test",
+        action="store_true",
+        help="Run in 5-second test mode instead of the standard 25-minute intervals"
     )
     learn_parser.set_defaults(func=handle_vocab_learn_command)
 

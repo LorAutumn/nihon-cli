@@ -36,15 +36,19 @@ class VocabQuiz:
             'incorrect': 0,
             'completed_items': 0
         }
+        self.questions_asked = 0
     
-    def start_session(self, limit: int = 15) -> None:
-        """Start a new learning session.
+    def run_session(self, limit: int = 15) -> int:
+        """Run a single learning session.
         
         Loads random incomplete vocabulary items from the database and
         begins an interactive quiz session.
         
         Args:
             limit: Maximum number of vocabulary items to include (default: 15)
+            
+        Returns:
+            int: Number of questions asked in this session
         """
         # Load vocabulary items
         self.current_session = self.repository.get_incomplete_vocabulary(limit)
@@ -52,7 +56,7 @@ class VocabQuiz:
         if not self.current_session:
             print("\n🎉 Keine Vokabeln zum Lernen verfügbar!")
             print("Alle Vokabeln sind abgeschlossen oder es wurden noch keine hochgeladen.")
-            return
+            return 0
         
         # Shuffle for variety
         random.shuffle(self.current_session)
@@ -63,6 +67,7 @@ class VocabQuiz:
             'incorrect': 0,
             'completed_items': 0
         }
+        self.questions_asked = 0
         
         # Display session header
         session_info = (
@@ -76,6 +81,19 @@ class VocabQuiz:
         
         # Display summary
         self._display_summary()
+        
+        return self.questions_asked
+    
+    def start_session(self, limit: int = 15) -> None:
+        """Start a new learning session (legacy method for compatibility).
+        
+        Loads random incomplete vocabulary items from the database and
+        begins an interactive quiz session.
+        
+        Args:
+            limit: Maximum number of vocabulary items to include (default: 15)
+        """
+        self.run_session(limit)
     
     def _run_quiz_loop(self) -> None:
         """Execute the main quiz loop for all vocabulary items."""
@@ -94,6 +112,9 @@ class VocabQuiz:
             except (KeyboardInterrupt, EOFError):
                 print("\n\n⚠️  Lernsitzung abgebrochen.")
                 return
+            
+            # Increment questions asked counter
+            self.questions_asked += 1
             
             # Check answer
             if direction == "jp_to_de":
