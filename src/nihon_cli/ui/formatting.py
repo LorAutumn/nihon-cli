@@ -4,6 +4,7 @@ import textwrap
 # ANSI escape codes for colors
 COLOR_GREEN = "\033[92m"
 COLOR_RED = "\033[91m"
+COLOR_YELLOW = "\033[93m"
 COLOR_RESET = "\033[0m"
 
 def get_terminal_width(fallback=80):

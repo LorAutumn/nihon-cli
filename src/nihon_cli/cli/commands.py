@@ -155,12 +155,357 @@ def handle_vocab_learn_command(args: argparse.Namespace) -> None:
         sys.exit(1)
 
 
+def handle_weekly_session_start_command(args: argparse.Namespace) -> None:
+    """
+    Handler for the 'vocab weekly-session start' command.
+
+    Starts or continues a weekly learning session with 10-item quizzes.
+
+    Args:
+        args (argparse.Namespace): The parsed command-line arguments.
+                                   Expected to have 'test' attribute.
+    """
+    from datetime import date
+    from nihon_cli.core.quiz_weekly import WeeklySessionQuiz
+    from nihon_cli.core.timer import LearningTimer
+    from nihon_cli.core.weekly_session import WeeklySession
+    from nihon_cli.infra.repository import VocabRepository
+    from nihon_cli.infra.weekly_session_repository import WeeklySessionRepository
+    from nihon_cli.ui.formatting import draw_box
+
+    try:
+        vocab_repo = VocabRepository()
+        session_repo = WeeklySessionRepository()
+
+        # Check for current week session
+        session = session_repo.get_current_week_session()
+
+        if not session:
+            print("\n✗ Keine aktive Wochensitzung gefunden.")
+            print("Bitte verwenden Sie 'vocab weekly-session new' um eine Session zu erstellen.")
+            sys.exit(1)
+
+        # Check if week has expired
+        if session.is_expired():
+            print("\n" + draw_box(
+                "Die Woche ist zu Ende!\n\n"
+                "Möchten Sie:\n"
+                "  [1] Neue Woche mit neuen Vokabeln starten\n"
+                "  [2] Letzte Woche wiederholen",
+                title="📅 Wochenende"
+            ))
+
+            choice = input("\nAuswahl (1/2): ").strip()
+
+            if choice == "1":
+                print("\nVerwenden Sie 'vocab weekly-session new' um eine neue Session zu erstellen.")
+                sys.exit(0)
+            elif choice == "2":
+                # Repeat last week - reset weekly counters
+                old_items = session_repo.get_session_items(session.id, prioritize_by_progress=False)
+                vocab_ids = [item.id for item in old_items]
+                vocab_repo.reset_weekly_counters(vocab_ids)
+                # Create new session with same vocab
+                session = session_repo.create_new_session(vocab_ids)
+                print(f"\n✓ Neue Woche erstellt mit {len(vocab_ids)} Vokabeln")
+            else:
+                print("\n✗ Ungültige Auswahl.")
+                sys.exit(1)
+
+        # Initialize quiz engine
+        quiz = WeeklySessionQuiz(vocab_repo, session_repo)
+
+        # Determine timer interval
+        interval_seconds = 5 if args.test else 1500
+
+        # Start endless loop with timer
+        while True:
+            questions_asked = quiz.run_session(session.id)
+
+            if questions_asked > 0:
+                timer = LearningTimer(interval_seconds)
+                timer.wait_for_next_session()
+            else:
+                print("\n✅ Alle Vokabeln dieser Woche wurden ausreichend geübt!")
+                break
+
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Wochensitzung abgebrochen.")
+        sys.exit(0)
+    except Exception as e:
+        print(f"✗ Unerwarteter Fehler: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+
+def handle_weekly_session_import_image_command(args: argparse.Namespace) -> None:
+    """
+    Handler for the 'vocab weekly-session import-image' command.
+
+    Imports vocabulary from an image using OCR (OpenAI Vision API).
+
+    Args:
+        args (argparse.Namespace): The parsed command-line arguments.
+                                   Expected to have 'image_path' and 'tag' attributes.
+    """
+    from datetime import date
+    from pathlib import Path
+    from nihon_cli.core.ocr_parser import OpenAIVisionParser
+    from nihon_cli.core.vocabulary import VocabularyItem
+    from nihon_cli.infra.repository import VocabRepository
+    from nihon_cli.infra.weekly_session_repository import WeeklySessionRepository
+    from nihon_cli.ui.item_selector import VocabItemSelector
+
+    try:
+        image_path = Path(args.image_path)
+
+        if not image_path.exists():
+            print(f"✗ Bilddatei nicht gefunden: {image_path}")
+            sys.exit(1)
+
+        # Extract vocabulary from image
+        print("🔍 Extrahiere Vokabeln aus Bild...")
+        try:
+            parser = OpenAIVisionParser()
+            extracted_items = parser.extract_vocabulary_from_image(image_path)
+        except ImportError as e:
+            print(f"\n✗ Fehler: {e}")
+            print("\nBitte installieren Sie das openai Package:")
+            print("  pip install openai")
+            sys.exit(1)
+        except ValueError as e:
+            print(f"\n✗ Fehler: {e}")
+            print("\nStellen Sie sicher, dass OPENAI_API_KEY gesetzt ist:")
+            print("  export OPENAI_API_KEY='your-api-key'")
+            sys.exit(1)
+
+        print(f"✓ {len(extracted_items)} Vokabeln gefunden")
+
+        if not extracted_items:
+            print("Keine Vokabeln extrahiert. Bitte prüfen Sie das Bild.")
+            sys.exit(0)
+
+        # Interactive selection
+        selector = VocabItemSelector()
+        selected_items = selector.display_and_select(extracted_items)
+
+        if not selected_items:
+            print("Import abgebrochen.")
+            sys.exit(0)
+
+        # Convert to VocabularyItem objects
+        vocab_items = []
+        for item_dict in selected_items:
+            vocab_item = VocabularyItem(
+                id=0,  # Will be set by database
+                japanese_vocab=item_dict['japanese'],
+                german_vocab=item_dict['german'],
+                source_file=image_path.name,
+                upload_tag=args.tag or f"ocr_{date.today().isoformat()}",
+                vocab_type=item_dict.get('vocab_type'),
+                base_form=item_dict.get('base_form'),
+                weekly_correct_german=0,
+                weekly_correct_japanese=0
+            )
+            vocab_items.append(vocab_item)
+
+        # Insert into database
+        vocab_repo = VocabRepository()
+        inserted, skipped = vocab_repo.add_vocabulary_with_weekly_fields(
+            vocab_items,
+            image_path.name,
+            args.tag or f"ocr_{date.today().isoformat()}"
+        )
+
+        print(f"\n✓ {inserted} Vokabeln importiert ({skipped} Duplikate übersprungen)")
+
+        # Add to current weekly session if one exists
+        session_repo = WeeklySessionRepository()
+        current_session = session_repo.get_current_week_session()
+
+        if current_session:
+            vocab_ids = [item.id for item in vocab_items if item.id > 0]
+            added = session_repo.add_items_to_session(current_session.id, vocab_ids)
+            print(f"✓ {added} Vokabeln zur aktuellen Wochensitzung hinzugefügt")
+        else:
+            print("\n⚠ Keine aktive Wochensitzung. Vokabeln nur importiert, nicht verknüpft.")
+            print("Verwenden Sie 'vocab weekly-session new' um eine Session zu erstellen.")
+
+    except Exception as e:
+        print(f"✗ Fehler beim Importieren: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+
+def handle_weekly_session_new_command(args: argparse.Namespace) -> None:
+    """
+    Handler for the 'vocab weekly-session new' command.
+
+    Creates a new weekly session by letting the user select vocabulary items.
+
+    Args:
+        args (argparse.Namespace): The parsed command-line arguments.
+                                   Expected to have optional 'tag' attribute.
+    """
+    from nihon_cli.infra.repository import VocabRepository
+    from nihon_cli.infra.weekly_session_repository import WeeklySessionRepository
+    from nihon_cli.ui.formatting import draw_box
+
+    try:
+        vocab_repo = VocabRepository()
+        session_repo = WeeklySessionRepository()
+
+        # Check if a session already exists for current week
+        existing_session = session_repo.get_current_week_session()
+        if existing_session and not existing_session.is_expired():
+            print("\n⚠ Es existiert bereits eine aktive Wochensitzung.")
+            print(f"Woche: {existing_session.week_start} bis {existing_session.week_end}")
+            overwrite = input("\nMöchten Sie diese ersetzen? (j/N): ").strip().lower()
+            if overwrite != 'j':
+                print("Abgebrochen.")
+                sys.exit(0)
+
+        # Get all available vocabulary
+        all_vocab = vocab_repo.get_incomplete_vocabulary(limit=1000)
+
+        if not all_vocab:
+            print("\n✗ Keine Vokabeln verfügbar.")
+            print("Bitte importieren Sie zuerst Vokabeln mit 'vocab upload' oder 'vocab weekly-session import-image'.")
+            sys.exit(1)
+
+        # Filter by tag if specified
+        if hasattr(args, 'tag') and args.tag:
+            all_vocab = [v for v in all_vocab if v.upload_tag == args.tag]
+            if not all_vocab:
+                print(f"\n✗ Keine Vokabeln mit Tag '{args.tag}' gefunden.")
+                sys.exit(1)
+
+        # Display available vocabulary
+        print("\n" + draw_box(
+            f"Verfügbare Vokabeln: {len(all_vocab)}",
+            title="📚 Vokabel-Auswahl"
+        ))
+
+        # Show first 10 items as preview
+        print("\nVorschau (erste 10 Items):")
+        for i, item in enumerate(all_vocab[:10], 1):
+            jp_str = ", ".join(item.japanese_vocab)
+            de_str = ", ".join(item.german_vocab)
+            type_str = f"[{item.vocab_type}]" if item.vocab_type else ""
+            print(f"  {i}. {jp_str} → {de_str} {type_str}")
+
+        if len(all_vocab) > 10:
+            print(f"  ... und {len(all_vocab) - 10} weitere")
+
+        # Ask how many to include
+        print("\nWie viele Vokabeln möchten Sie in diese Woche aufnehmen?")
+        print(f"(Empfohlen: 10-20 für eine Woche, Verfügbar: {len(all_vocab)})")
+
+        while True:
+            try:
+                count_input = input("\nAnzahl (oder 'all' für alle): ").strip().lower()
+                if count_input == 'all':
+                    count = len(all_vocab)
+                else:
+                    count = int(count_input)
+                    if count <= 0 or count > len(all_vocab):
+                        print(f"Bitte eine Zahl zwischen 1 und {len(all_vocab)} eingeben.")
+                        continue
+                break
+            except ValueError:
+                print("Ungültige Eingabe. Bitte eine Zahl eingeben.")
+
+        # Select items (take first N by default, could be randomized)
+        selected_items = all_vocab[:count]
+        vocab_ids = [item.id for item in selected_items]
+
+        # Create new session
+        new_session = session_repo.create_new_session(vocab_ids)
+
+        print("\n" + draw_box(
+            f"Woche: {new_session.week_start} bis {new_session.week_end}\n"
+            f"Vokabeln: {len(vocab_ids)}\n"
+            f"\n"
+            f"Bereit zum Lernen!",
+            title="✓ Neue Wochensitzung erstellt"
+        ))
+
+        print("\nStarten Sie das Lernen mit:")
+        print("  nihon-cli vocab weekly-session start")
+
+    except KeyboardInterrupt:
+        print("\n\nAbgebrochen.")
+        sys.exit(0)
+    except Exception as e:
+        print(f"✗ Fehler: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+
+def handle_weekly_session_status_command(args: argparse.Namespace) -> None:
+    """
+    Handler for the 'vocab weekly-session status' command.
+
+    Shows current weekly session progress and statistics.
+
+    Args:
+        args (argparse.Namespace): The parsed command-line arguments.
+    """
+    from nihon_cli.infra.weekly_session_repository import WeeklySessionRepository
+    from nihon_cli.ui.formatting import draw_box
+
+    try:
+        session_repo = WeeklySessionRepository()
+        current_session = session_repo.get_current_week_session()
+
+        if not current_session:
+            print("\n✗ Keine aktive Wochensitzung gefunden.")
+            print("Verwenden Sie 'vocab weekly-session new' um eine Session zu erstellen.")
+            sys.exit(0)
+
+        # Get statistics
+        stats = session_repo.get_session_statistics(current_session.id)
+        items = session_repo.get_session_items(current_session.id, prioritize_by_progress=True)
+
+        # Build status display
+        status_content = (
+            f"Woche: {current_session.week_start} bis {current_session.week_end}\n"
+            f"Status: {'Aktiv' if current_session.status == 'active' else 'Abgeschlossen'}\n"
+            f"\n"
+            f"Vokabeln gesamt: {stats['total_items']}\n"
+            f"Mit 2+ korrekt (JP→DE): {stats['items_2plus_german']}\n"
+            f"Mit 2+ korrekt (DE→JP): {stats['items_2plus_japanese']}\n"
+            f"\n"
+            f"Durchschnittlicher Fortschritt: {stats['avg_progress']:.1f} korrekte Antworten"
+        )
+
+        print("\n" + draw_box(status_content, title="📊 Wochensitzung Status"))
+
+        # Show items needing practice
+        if items:
+            print("\n🎯 Vokabeln mit niedrigem Fortschritt (Top 5):")
+            low_progress_items = items[:5]
+            for i, item in enumerate(low_progress_items, 1):
+                jp_str = ", ".join(item.japanese_vocab)
+                de_str = ", ".join(item.german_vocab)
+                print(f"  {i}. {jp_str} → {de_str} (DE: {item.weekly_correct_german}, JP: {item.weekly_correct_japanese})")
+
+    except Exception as e:
+        print(f"✗ Fehler: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+
 def handle_config_set_command(key: str, value: str) -> None:
     """
     Handler for the 'config set' command.
-    
+
     Saves a configuration key-value pair to the config file.
-    
+
     Args:
         key: The configuration key to set
         value: The configuration value to set
@@ -295,6 +640,64 @@ def setup_argument_parser() -> argparse.ArgumentParser:
         help="Run in 5-second test mode instead of the standard 25-minute intervals"
     )
     learn_parser.set_defaults(func=handle_vocab_learn_command)
+
+    # Subparser for 'weekly-session' (top-level command)
+    weekly_parser = subparsers.add_parser(
+        "weekly-session",
+        help="Weekly vocabulary learning sessions (Thursday-Wednesday cycles)"
+    )
+    weekly_subparsers = weekly_parser.add_subparsers(
+        dest="weekly_command",
+        help="Weekly session sub-commands"
+    )
+
+    # weekly-session new
+    new_parser = weekly_subparsers.add_parser(
+        "new",
+        help="Create a new weekly session with selected vocabulary"
+    )
+    new_parser.add_argument(
+        "--tag",
+        type=str,
+        help="Optional tag to filter vocabulary by"
+    )
+    new_parser.set_defaults(func=handle_weekly_session_new_command)
+
+    # weekly-session start
+    start_parser = weekly_subparsers.add_parser(
+        "start",
+        help="Start or continue the current week's learning session"
+    )
+    start_parser.add_argument(
+        "--test",
+        action="store_true",
+        help="Run in 5-second test mode instead of 25-minute intervals"
+    )
+    start_parser.set_defaults(func=handle_weekly_session_start_command)
+
+    # weekly-session import-image
+    import_parser = weekly_subparsers.add_parser(
+        "import-image",
+        help="Import vocabulary from an image using OCR"
+    )
+    import_parser.add_argument(
+        "image_path",
+        type=str,
+        help="Path to the image file"
+    )
+    import_parser.add_argument(
+        "--tag",
+        type=str,
+        help="Optional tag for this import (default: ocr_<date>)"
+    )
+    import_parser.set_defaults(func=handle_weekly_session_import_image_command)
+
+    # weekly-session status
+    status_parser = weekly_subparsers.add_parser(
+        "status",
+        help="Show current week's progress and statistics"
+    )
+    status_parser.set_defaults(func=handle_weekly_session_status_command)
 
     # Subparser for 'config'
     config_parser = subparsers.add_parser(

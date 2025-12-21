@@ -37,6 +37,7 @@ def init_db() -> Path:
     
     # Connect to database (creates file if it doesn't exist)
     conn = sqlite3.connect(db_path)
+    conn.execute("PRAGMA foreign_keys = ON")  # Enable foreign key constraints
     cursor = conn.cursor()
     
     try:
@@ -75,5 +76,10 @@ def init_db() -> Path:
         raise sqlite3.Error(f"Failed to initialize database: {e}") from e
     finally:
         conn.close()
-    
+
+    # Run migrations to add new columns and tables
+    from nihon_cli.infra.migrations import MigrationManager
+    migration_manager = MigrationManager(db_path)
+    migration_manager.run_migrations()
+
     return Path(db_path)
