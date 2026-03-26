@@ -20,17 +20,23 @@ except ImportError:
 
 _PROMPT_TEMPLATE = """\
 Du bist ein Korrektor für ein Japanisch-Deutsch Vokabelquiz (Anfängerniveau A1).
+Entscheide ob der Schüler das richtige Wort/Konzept gemeint hat.
 
 Beispiele:
-- Erwartet "Großvater", Antwort "Opa" -> JA (umgangssprachlich gleich)
-- Erwartet "eigener älterer Bruder", Antwort "großer Bruder" -> JA (umgangssprachlich gleich)
-- Erwartet "eigener jüngerer Bruder", Antwort "kleiner Bruder" -> JA (umgangssprachlich gleich)
-- Erwartet "Ehemann", Antwort "Mann" -> NEIN ("Mann" ist nicht dasselbe wie "Ehemann")
-- Erwartet "Ehefrau", Antwort "Frau" -> NEIN ("Frau" ist nicht dasselbe wie "Ehefrau")
-- Erwartet "Großvater", Antwort "Onkel" -> NEIN (falsch)
-- Erwartet "jüngerer Bruder von jemand anderem", Antwort "jüngerer Bruder" -> NEIN (Qualifier fehlt)
+- Erwartet "Großvater", Antwort "Opa" -> JA (gleiche Bedeutung)
+- Erwartet "eigener älterer Bruder", Antwort "großer Bruder" -> JA (gleiches Konzept)
+- Erwartet "eigener jüngerer Bruder", Antwort "kleiner Bruder" -> JA (gleiches Konzept)
+- Erwartet "jüngerer Bruder von jemand anderem", Antwort "kleiner Bruder von jemand anderem" -> JA
+- Erwartet "jüngerer Bruder von jemand anderem", Antwort "jüngerer Bruder" -> JA (Kernwort stimmt, "von jemand anderem" ist optional)
+- Erwartet "Großvater", Antwort "Großvater von jemand anderem" -> JA (Kernwort stimmt)
+- Erwartet "älterer Bruder von jemand anderem", Antwort "älterer Bruder" -> JA (Kernwort stimmt)
+- Erwartet "Ehemann", Antwort "Mann" -> NEIN (zu unspezifisch)
+- Erwartet "Ehefrau", Antwort "Frau" -> NEIN (zu unspezifisch)
+- Erwartet "eigener älterer Bruder", Antwort "Bruder" -> NEIN (zu unspezifisch, "älterer" fehlt)
+- Erwartet "Großvater", Antwort "Onkel" -> NEIN (falsches Wort)
+- Erwartet "älterer Bruder", Antwort "jüngerer Bruder" -> NEIN (Gegenteil)
 
-WICHTIG: Oberbegriffe sind KEINE Synonyme ("Frau" ≠ "Ehefrau"), aber umgangssprachliche Varianten SIND Synonyme ("großer Bruder" = "älterer Bruder").
+WICHTIG: Qualifier wie "eigener" oder "von jemand anderem" dürfen fehlen oder extra sein. Aber das Kernwort (z.B. "älterer Bruder", "Ehemann", "Großvater") muss stimmen. Nur "Bruder" ohne "älterer/jüngerer" ist zu unspezifisch.
 
 Erwartete Antwort(en): {expected}
 Antwort des Schülers: {answer}
@@ -81,6 +87,18 @@ class AnswerChecker:
                 accepted=True, method="typo",
                 feedback=f"Tippfehler erkannt, korrekt: {best_answer}",
             )
+
+        # Substring check: user's answer is the core of a longer expected answer
+        # e.g. "jüngerer Bruder" matches "jüngerer Bruder von jemand anderem"
+        # or "Großvater von jemand anderem" matches "Großvater"
+        for a in correct_answers:
+            a_lower = a.strip().lower()
+            if (a_lower.startswith(normalized) and len(normalized) >= len(a_lower) * 0.4) or \
+               (normalized.startswith(a_lower) and len(a_lower) >= len(normalized) * 0.4):
+                return AnswerCheckResult(
+                    accepted=True, method="semantic",
+                    feedback=f"als korrekt gewertet, erwartete Antwort: {a}",
+                )
 
         # No semantic check for Japanese answers
         if direction == "de_to_jp":
