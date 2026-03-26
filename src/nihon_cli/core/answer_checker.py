@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from difflib import SequenceMatcher
 from typing import List, Optional
 
-_TYPO_THRESHOLD = 0.85
+_TYPO_THRESHOLD = 0.87
 
 try:
     import ollama as _ollama_client
@@ -70,14 +70,17 @@ class AnswerChecker:
         if any(normalized == a.strip().lower() for a in correct_answers):
             return AnswerCheckResult(accepted=True, method="exact")
 
-        # Typo check (works for both directions)
+        # Typo check — pick best match only
+        best_ratio, best_answer = 0.0, ""
         for a in correct_answers:
             ratio = SequenceMatcher(None, normalized, a.strip().lower()).ratio()
-            if ratio >= _TYPO_THRESHOLD:
-                return AnswerCheckResult(
-                    accepted=True, method="typo",
-                    feedback=f"Tippfehler erkannt, korrekt: {a}",
-                )
+            if ratio > best_ratio:
+                best_ratio, best_answer = ratio, a
+        if best_ratio >= _TYPO_THRESHOLD:
+            return AnswerCheckResult(
+                accepted=True, method="typo",
+                feedback=f"Tippfehler erkannt, korrekt: {best_answer}",
+            )
 
         # No semantic check for Japanese answers
         if direction == "de_to_jp":
