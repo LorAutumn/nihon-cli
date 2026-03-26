@@ -1,6 +1,7 @@
 import logging
 import os
 import platform
+import select
 import subprocess
 import sys
 import time
@@ -42,6 +43,9 @@ class LearningTimer:
             logging.info(f"Starting to wait for {self.interval_seconds} seconds.")
             for i in range(self.interval_seconds, 0, -1):
                 self.show_countdown(i)
+                if self._check_skip():
+                    print("\nSession wird gestartet...")
+                    return
                 time.sleep(1)
             # The terminal is cleared in the main app loop.
             print("\nStarting next session...")
@@ -61,9 +65,20 @@ class LearningTimer:
             remaining_seconds (int): The number of seconds left.
         """
         mins, secs = divmod(remaining_seconds, 60)
-        timer_display = f"Next session in: {mins:02d}:{secs:02d}"
+        timer_display = f"Next session in: {mins:02d}:{secs:02d}  (Enter = sofort starten)"
         sys.stdout.write(f"\r{timer_display}")
         sys.stdout.flush()
+
+    @staticmethod
+    def _check_skip() -> bool:
+        """Check if user pressed Enter to skip the timer."""
+        try:
+            if select.select([sys.stdin], [], [], 0)[0]:
+                sys.stdin.readline()
+                return True
+        except (OSError, ValueError):
+            pass
+        return False
 
     def is_test_mode(self) -> bool:
         """
