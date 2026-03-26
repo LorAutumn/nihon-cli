@@ -6,7 +6,10 @@ Ollama is not available.
 """
 
 from dataclasses import dataclass
+from difflib import SequenceMatcher
 from typing import List, Optional
+
+_TYPO_THRESHOLD = 0.85
 
 try:
     import ollama as _ollama_client
@@ -66,6 +69,15 @@ class AnswerChecker:
         # Fast path: exact match
         if any(normalized == a.strip().lower() for a in correct_answers):
             return AnswerCheckResult(accepted=True, method="exact")
+
+        # Typo check (works for both directions)
+        for a in correct_answers:
+            ratio = SequenceMatcher(None, normalized, a.strip().lower()).ratio()
+            if ratio >= _TYPO_THRESHOLD:
+                return AnswerCheckResult(
+                    accepted=True, method="typo",
+                    feedback=f"Tippfehler erkannt, korrekt: {a}",
+                )
 
         # No semantic check for Japanese answers
         if direction == "de_to_jp":

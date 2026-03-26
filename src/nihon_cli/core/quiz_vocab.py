@@ -210,9 +210,8 @@ class VocabQuiz:
             item: The vocabulary item
         """
         if result.accepted:
-            if result.method == "semantic":
+            if result.method in ("semantic", "typo"):
                 feedback = f"{COLOR_GREEN}✅ Richtig! ({result.feedback}){COLOR_RESET}"
-                feedback += f"\nErwartete Antwort: {', '.join(correct_answers)}"
             else:
                 feedback = f"{COLOR_GREEN}✅ Richtig!{COLOR_RESET}"
             if item.completed:
