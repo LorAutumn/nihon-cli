@@ -62,52 +62,114 @@ def handle_words_command(args: argparse.Namespace) -> None:
 def handle_vocab_upload_command(args: argparse.Namespace) -> None:
     """
     Handler for the 'vocab upload' command.
-    
-    Parses a Markdown file containing vocabulary tables and imports
+
+    Parses a Markdown or Excel file containing vocabulary and imports
     the vocabulary items into the database.
-    
+
     Args:
         args (argparse.Namespace): The parsed command-line arguments.
                                    Expected to have 'file' and 'tag' attributes.
     """
     from pathlib import Path
-    from nihon_cli.core.parser import MarkdownVocabParser
     from nihon_cli.infra.repository import VocabRepository
-    
+
     file_path = Path(args.file)
     upload_tag = args.tag or file_path.stem
-    
+
     try:
-        # Parse the Markdown file
-        parser = MarkdownVocabParser()
-        items = parser.parse(file_path)
-        
-        # Update items with the upload tag
-        for item in items:
-            item.upload_tag = upload_tag
-        
-        # Insert into database
-        repo = VocabRepository()
-        inserted, skipped = repo.add_vocabulary_batch(
-            items,
-            file_path.name,
-            upload_tag
-        )
-        
-        # Display results
-        print(f"✓ {inserted} Vokabeln erfolgreich importiert!")
-        if skipped > 0:
-            print(f"  ({skipped} Duplikate übersprungen)")
-        
+        if file_path.suffix in ('.xlsx', '.xls'):
+            _upload_excel(file_path, upload_tag)
+        else:
+            _upload_markdown(file_path, upload_tag)
+
     except FileNotFoundError as e:
         print(f"✗ Fehler: Datei nicht gefunden - {e}")
         sys.exit(1)
     except ValueError as e:
         print(f"✗ Fehler: Ungültiges Format - {e}")
         sys.exit(1)
+    except KeyboardInterrupt:
+        print("\n\nAbgebrochen.")
+        sys.exit(0)
     except Exception as e:
         print(f"✗ Unerwarteter Fehler: {e}")
         sys.exit(1)
+
+
+def _upload_markdown(file_path, upload_tag: str) -> None:
+    """Import vocabulary from a Markdown file."""
+    from nihon_cli.core.parser import MarkdownVocabParser
+    from nihon_cli.infra.repository import VocabRepository
+
+    parser = MarkdownVocabParser()
+    items = parser.parse(file_path)
+
+    for item in items:
+        item.upload_tag = upload_tag
+
+    repo = VocabRepository()
+    inserted, skipped = repo.add_vocabulary_batch(items, file_path.name, upload_tag)
+
+    print(f"✓ {inserted} Vokabeln erfolgreich importiert!")
+    if skipped > 0:
+        print(f"  ({skipped} Duplikate übersprungen)")
+
+
+def _upload_excel(file_path, upload_tag: str) -> None:
+    """Import vocabulary from an Excel file with interactive sheet selection."""
+    from nihon_cli.core.excel_parser import ExcelVocabParser
+    from nihon_cli.infra.repository import VocabRepository
+
+    parser = ExcelVocabParser()
+    sheets = parser.parse(file_path)
+
+    sheet_names = list(sheets.keys())
+    print(f"\n📚 {len(sheet_names)} Sheets gefunden:\n")
+    for i, name in enumerate(sheet_names, 1):
+        count = len(sheets[name])
+        print(f"  [{i}] {name} ({count} Vokabeln)")
+
+    print(f"\n  [a] Alle Sheets importieren")
+    print()
+
+    selection = input("Auswahl (z.B. 1,3 oder a für alle): ").strip().lower()
+
+    if selection == 'a':
+        selected = sheet_names
+    else:
+        try:
+            indices = [int(s.strip()) for s in selection.split(',')]
+            selected = [sheet_names[i - 1] for i in indices if 1 <= i <= len(sheet_names)]
+        except (ValueError, IndexError):
+            print("✗ Ungültige Auswahl.")
+            sys.exit(1)
+
+    if not selected:
+        print("Keine Sheets ausgewählt. Abgebrochen.")
+        sys.exit(0)
+
+    repo = VocabRepository()
+    total_inserted = 0
+    total_skipped = 0
+
+    for name in selected:
+        items = sheets[name]
+        tag = f"{upload_tag}_{name}" if len(selected) > 1 else upload_tag
+
+        for item in items:
+            item.upload_tag = tag
+            item.source_file = file_path.name
+
+        inserted, skipped = repo.add_vocabulary_with_weekly_fields(
+            items, file_path.name, tag
+        )
+        total_inserted += inserted
+        total_skipped += skipped
+        print(f"  ✓ {name}: {inserted} importiert, {skipped} übersprungen")
+
+    print(f"\n✓ Gesamt: {total_inserted} Vokabeln importiert!")
+    if total_skipped > 0:
+        print(f"  ({total_skipped} Duplikate übersprungen)")
 
 
 def handle_vocab_learn_command(args: argparse.Namespace) -> None:
@@ -433,7 +495,7 @@ def handle_weekly_session_new_command(args: argparse.Namespace) -> None:
         ))
 
         print("\nStarten Sie das Lernen mit:")
-        print("  nihon-cli vocab weekly-session start")
+        print("  nihon-cli weekly-session start")
 
     except KeyboardInterrupt:
         print("\n\nAbgebrochen.")
@@ -609,12 +671,12 @@ def setup_argument_parser() -> argparse.ArgumentParser:
     # vocab upload subcommand
     upload_parser = vocab_subparsers.add_parser(
         "upload",
-        help="Upload vocabulary from a Markdown file"
+        help="Upload vocabulary from a Markdown or Excel (.xlsx) file"
     )
     upload_parser.add_argument(
         "file",
         type=str,
-        help="Path to the Markdown file containing vocabulary table"
+        help="Path to the Markdown or Excel file containing vocabulary"
     )
     upload_parser.add_argument(
         "--tag",

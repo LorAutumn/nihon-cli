@@ -7,6 +7,7 @@ opposite pairing.
 
 from typing import List
 
+from nihon_cli.core.answer_checker import AnswerChecker, AnswerCheckResult
 from nihon_cli.core.vocabulary import VocabularyItem
 from nihon_cli.infra.repository import VocabRepository
 from nihon_cli.infra.weekly_session_repository import WeeklySessionRepository
@@ -37,6 +38,7 @@ class WeeklySessionQuiz:
         """
         self.vocab_repo = vocab_repository
         self.session_repo = session_repository
+        self.answer_checker = AnswerChecker()
         self.session_stats = {
             'correct': 0,
             'incorrect': 0
@@ -176,7 +178,8 @@ class WeeklySessionQuiz:
             else:  # de_to_jp
                 correct_answers = item.japanese_vocab
 
-            is_correct = self._check_answer(user_answer, correct_answers)
+            result = self.answer_checker.check(user_answer, correct_answers, direction)
+            is_correct = result.accepted
 
             # Update weekly progress
             self.vocab_repo.update_weekly_progress(item.id, direction, is_correct)
@@ -192,7 +195,7 @@ class WeeklySessionQuiz:
                 self.session_stats['incorrect'] += 1
 
             # Display feedback with base form
-            self._display_feedback(is_correct, user_answer, correct_answers, item)
+            self._display_feedback(result, user_answer, correct_answers, item)
 
             print()  # Empty line for spacing
 
@@ -223,29 +226,9 @@ class WeeklySessionQuiz:
         title = f"Frage {current}/{total}"
         print("\n" + draw_box(content, title=title))
 
-    def _check_answer(self, user_input: str, correct_answers: List[str]) -> bool:
-        """Check if the user's answer is correct.
-
-        The check is case-insensitive and accepts any of the possible
-        correct answers.
-
-        Args:
-            user_input: The user's answer
-            correct_answers: List of acceptable correct answers
-
-        Returns:
-            True if the answer is correct, False otherwise
-        """
-        user_input_normalized = user_input.strip().lower()
-
-        return any(
-            user_input_normalized == answer.strip().lower()
-            for answer in correct_answers
-        )
-
     def _display_feedback(
         self,
-        is_correct: bool,
+        result: AnswerCheckResult,
         user_answer: str,
         correct_answers: List[str],
         item: VocabularyItem
@@ -253,13 +236,17 @@ class WeeklySessionQuiz:
         """Display feedback after an answer with base form if available.
 
         Args:
-            is_correct: Whether the answer was correct
+            result: The answer check result
             user_answer: The user's answer
             correct_answers: List of correct answers
             item: The vocabulary item
         """
-        if is_correct:
-            feedback = f"{COLOR_GREEN}✅ Richtig!{COLOR_RESET}"
+        if result.accepted:
+            if result.method == "semantic":
+                feedback = f"{COLOR_GREEN}✅ Richtig! ({result.feedback}){COLOR_RESET}"
+                feedback += f"\nErwartete Antwort: {', '.join(correct_answers)}"
+            else:
+                feedback = f"{COLOR_GREEN}✅ Richtig!{COLOR_RESET}"
 
             # Show base form if available
             if item.base_form:
