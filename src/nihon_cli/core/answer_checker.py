@@ -36,7 +36,11 @@ Beispiele:
 - Erwartet "Großvater", Antwort "Onkel" -> NEIN (falsches Wort)
 - Erwartet "älterer Bruder", Antwort "jüngerer Bruder" -> NEIN (Gegenteil)
 
-WICHTIG: Qualifier wie "eigener" oder "von jemand anderem" dürfen fehlen oder extra sein. Aber das Kernwort (z.B. "älterer Bruder", "Ehemann", "Großvater") muss stimmen. Nur "Bruder" ohne "älterer/jüngerer" ist zu unspezifisch.
+WICHTIG:
+- Qualifier wie "eigener" oder "von jemand anderem" dürfen fehlen oder extra sein
+- Tippfehler tolerieren wenn das gemeinte Wort erkennbar ist: "Brunde" = "Bruder", "Eheefrau" = "Ehefrau"
+- Alternative Formulierungen akzeptieren: "eines anderen" = "von jemand anderem"
+- Aber das Kernwort (z.B. "älterer Bruder", "Ehemann", "Großvater") muss stimmen. Nur "Bruder" ohne "älterer/jüngerer" ist zu unspezifisch
 
 Erwartete Antwort(en): {expected}
 Antwort des Schülers: {answer}
