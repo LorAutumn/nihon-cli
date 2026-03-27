@@ -47,6 +47,27 @@ Antwort des Schülers: {answer}
 
 Antworte NUR mit: JA oder NEIN"""
 
+_PROMPT_JP_TEMPLATE = """\
+Du bist ein Korrektor für ein Japanisch-Deutsch Vokabelquiz (Anfängerniveau A1).
+Die Frage war Deutsch → Japanisch. Entscheide ob die japanische Antwort des Schülers eine korrekte Übersetzung ist.
+
+Familien-Synonympaare (eigene/fremde Form):
+そぼ = おばあさん (Großmutter), そふ = おじいさん (Großvater), あに = おにいさん (älterer Bruder), あね = おねえさん (ältere Schwester), おとうと = おとうとさん (jüngerer Bruder), いもうと = いもうとさん (jüngere Schwester), はは = おかあさん (Mutter), ちち = おとうさん (Vater)
+
+Beispiele:
+- Erwartet "おばあさん", Antwort "そぼ" -> JA (Synonym)
+- Erwartet "そぼ", Antwort "おばあさん" -> JA (Synonym)
+- Erwartet "おにいさん", Antwort "あに" -> JA (Synonym)
+- Erwartet "おかあさん", Antwort "はは" -> JA (Synonym)
+- Erwartet "おばあさん", Antwort "おじいさん" -> NEIN (Großmutter ≠ Großvater)
+
+WICHTIG: Im Japanischen gibt es oft zwei Formen für Familienmitglieder (eigene vs. fremde). Beide Formen akzeptieren.
+
+Erwartete Antwort(en): {expected}
+Antwort des Schülers: {answer}
+
+Antworte NUR mit: JA oder NEIN"""
+
 
 @dataclass
 class AnswerCheckResult:
@@ -104,15 +125,11 @@ class AnswerChecker:
                     feedback=f"als korrekt gewertet, erwartete Antwort: {a}",
                 )
 
-        # No semantic check for Japanese answers
-        if direction == "de_to_jp":
-            return AnswerCheckResult(accepted=False, method="exact")
-
         # Try semantic check
         if not self._is_ollama_available():
             return AnswerCheckResult(accepted=False, method="fallback_exact")
 
-        return self._semantic_check(normalized, correct_answers)
+        return self._semantic_check(normalized, correct_answers, direction)
 
     def _is_ollama_available(self) -> bool:
         if not _OLLAMA_AVAILABLE:
@@ -127,10 +144,11 @@ class AnswerChecker:
         return self._ollama_ok
 
     def _semantic_check(
-        self, user_input: str, correct_answers: List[str]
+        self, user_input: str, correct_answers: List[str], direction: str = "jp_to_de"
     ) -> AnswerCheckResult:
         expected = ", ".join(correct_answers)
-        prompt = _PROMPT_TEMPLATE.format(expected=expected, answer=user_input)
+        template = _PROMPT_JP_TEMPLATE if direction == "de_to_jp" else _PROMPT_TEMPLATE
+        prompt = template.format(expected=expected, answer=user_input)
 
         try:
             response = _ollama_client.chat(
@@ -140,10 +158,16 @@ class AnswerChecker:
             )
             reply = response["message"]["content"].strip().upper()
             accepted = reply.startswith("JA")
+            if accepted and direction == "de_to_jp":
+                feedback = f"auch korrekt, gesucht war: {', '.join(correct_answers)}"
+            elif accepted:
+                feedback = "als Synonym akzeptiert"
+            else:
+                feedback = None
             return AnswerCheckResult(
                 accepted=accepted,
                 method="semantic",
-                feedback="als Synonym akzeptiert" if accepted else None,
+                feedback=feedback,
             )
         except Exception:
             return AnswerCheckResult(accepted=False, method="fallback_exact")
