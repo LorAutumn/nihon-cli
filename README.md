@@ -13,7 +13,8 @@ Nihon CLI is designed to help users learn Japanese characters through interactiv
 -   **Character Sets**: Support for Hiragana, Katakana, and mixed character sets
 -   **Basic and Advanced Characters**: Choose between basic characters or include advanced combination characters (Yōon)
 -   **Simple CLI Interface**: Easy-to-use command-line interface
--   **No External Dependencies**: Uses only Python standard library
+-   **Kanji Learning**: Import kanji from images (OCR) and learn them with spaced repetition
+-   **Flash Cards**: Always-on-top floating window for passive katakana and kanji review
 
 ## Installation
 
@@ -250,6 +251,80 @@ uvx nihon-cli words --test
 
 **Note:** The `--advanced` option is not available for the `words` command as all vocabulary is included by default.
 
+### Kanji Commands
+
+#### `kanji import`
+
+Imports kanji from image files using OCR (requires OpenAI API key).
+
+```bash
+# Import kanji from a single image
+nihon-cli kanji import path/to/image.HEIC
+
+# Import from multiple images at once
+nihon-cli kanji import img1.HEIC img2.HEIC img3.HEIC
+
+# With a custom tag
+nihon-cli kanji import *.HEIC --tag "lektion1"
+```
+
+**Available Options:**
+
+-   `--tag`: Optional tag for organizing imports (default: `kanji_<date>`)
+
+#### `kanji learn`
+
+Starts an interactive kanji learning session with box logic (5x correct = completed).
+
+```bash
+# Start learning
+nihon-cli kanji learn
+
+# With test mode (5-second intervals)
+nihon-cli kanji learn --test
+
+# Limit kanji per session
+nihon-cli kanji learn --limit 10
+```
+
+**Available Options:**
+
+-   `--test`: Run in 5-second test mode
+-   `--limit`: Number of kanji per session (default: 15)
+
+#### `kanji list`
+
+Shows all imported kanji with their learning progress.
+
+```bash
+nihon-cli kanji list
+```
+
+### Flash Card Commands
+
+#### `flash katakana`
+
+Opens a floating always-on-top window that cycles through katakana characters with readings and example words.
+
+```bash
+nihon-cli flash katakana
+```
+
+#### `flash kanji`
+
+Opens a floating always-on-top window that cycles through unlearned kanji from the database.
+
+```bash
+nihon-cli flash kanji
+```
+
+**Window Features:**
+
+-   Always-on-top, freely resizable
+-   Configurable interval (1-15s, default 4s)
+-   Example words and readings toggleable via hover menu (top right)
+-   Click or Space/Arrow Right to skip to next card
+
 ### Command Options Reference
 
 -   `--test`: Runs the training in a 5-second test mode instead of the standard 25-minute intervals
@@ -274,7 +349,10 @@ nihon-cli/
 │   │   ├── core/
 │   │   │   ├── __init__.py
 │   │   │   ├── character.py     # Character Domain Model
+│   │   │   ├── kanji.py         # Kanji Domain Model
 │   │   │   ├── quiz.py          # Quiz Logic
+│   │   │   ├── quiz_kanji.py    # Kanji Quiz Engine
+│   │   │   ├── flash.py         # Flash Card Window
 │   │   │   └── timer.py         # Learning Timer
 │   │   ├── data/
 │   │   │   ├── __init__.py
@@ -283,7 +361,8 @@ nihon-cli/
 │   │   │   ├── hiragana_advanced.py # Advanced Hiragana Characters (Yōon)
 │   │   │   ├── katakana.py      # Complete Katakana Character Data
 │   │   │   ├── katakana_basic.py    # Basic Katakana Characters
-│   │   │   └── katakana_advanced.py # Advanced Katakana Characters (Yōon)
+│   │   │   ├── katakana_advanced.py # Advanced Katakana Characters (Yōon)
+│   │   │   └── katakana_flash.py   # Katakana Flash Card Data
 │   │   ├── cli/
 │   │   │   ├── __init__.py
 │   │   │   └── commands.py      # CLI Command Handler
@@ -339,6 +418,8 @@ MIT License (to be added)
 -   [x] Add comprehensive character datasets
 -   [x] Implement quiz and timer systems
 -   [x] Add CLI command handling
+-   [x] Kanji learning mode with OCR import and box logic
+-   [x] Flash card window for passive katakana and kanji review
 -   [ ] Create automated tests
 -   [ ] Add progress tracking features
 -   [ ] Implement advanced learning algorithms
