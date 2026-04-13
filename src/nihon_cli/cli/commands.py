@@ -562,6 +562,174 @@ def handle_weekly_session_status_command(args: argparse.Namespace) -> None:
         sys.exit(1)
 
 
+def handle_kanji_import_command(args: argparse.Namespace) -> None:
+    """
+    Handler for the 'kanji import' command.
+
+    Imports kanji from image files using OCR (OpenAI Vision API).
+
+    Args:
+        args: Parsed command-line arguments with 'image_paths' and 'tag'.
+    """
+    from datetime import date
+    from pathlib import Path
+    from nihon_cli.core.ocr_parser import OpenAIVisionParser
+    from nihon_cli.core.kanji import KanjiItem
+    from nihon_cli.infra.kanji_repository import KanjiRepository
+
+    try:
+        image_paths = [Path(p) for p in args.image_paths]
+
+        for path in image_paths:
+            if not path.exists():
+                print(f"✗ Bilddatei nicht gefunden: {path}")
+                sys.exit(1)
+
+        try:
+            parser = OpenAIVisionParser()
+        except ImportError as e:
+            print(f"\n✗ Fehler: {e}")
+            print("\nBitte installieren Sie das openai Package:")
+            print("  pip install openai")
+            sys.exit(1)
+        except ValueError as e:
+            print(f"\n✗ Fehler: {e}")
+            print("\nStellen Sie sicher, dass OPENAI_API_KEY gesetzt ist:")
+            print("  export OPENAI_API_KEY='your-api-key'")
+            sys.exit(1)
+
+        all_extracted = []
+        for path in image_paths:
+            print(f"🔍 Extrahiere Kanji aus {path.name}...")
+            extracted = parser.extract_kanji_from_image(path)
+            print(f"  ✓ {len(extracted)} Kanji gefunden")
+            all_extracted.extend(extracted)
+
+        if not all_extracted:
+            print("Keine Kanji extrahiert. Bitte prüfen Sie die Bilder.")
+            sys.exit(0)
+
+        # Show extracted kanji for review
+        print(f"\n📋 {len(all_extracted)} Kanji extrahiert:\n")
+        for i, item in enumerate(all_extracted, 1):
+            readings = ", ".join(item['readings'])
+            print(f"  {i}. {item['kanji']} → {readings} ({item['meaning_german']})")
+
+        print()
+        confirm = input("Alle importieren? (J/n): ").strip().lower()
+        if confirm == 'n':
+            print("Import abgebrochen.")
+            sys.exit(0)
+
+        # Convert to KanjiItem objects
+        tag = args.tag or f"kanji_{date.today().isoformat()}"
+        kanji_items = []
+        for item in all_extracted:
+            kanji_item = KanjiItem(
+                id=0,
+                kanji=item['kanji'],
+                readings_japanese=item['readings'],
+                meaning_german=item['meaning_german'],
+                source_file=", ".join(p.name for p in image_paths),
+                upload_tag=tag,
+            )
+            kanji_items.append(kanji_item)
+
+        repo = KanjiRepository()
+        inserted, skipped = repo.add_kanji_batch(
+            kanji_items,
+            ", ".join(p.name for p in image_paths),
+            tag
+        )
+
+        print(f"\n✓ {inserted} Kanji importiert ({skipped} Duplikate übersprungen)")
+
+    except KeyboardInterrupt:
+        print("\n\nAbgebrochen.")
+        sys.exit(0)
+    except Exception as e:
+        print(f"✗ Fehler beim Importieren: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+
+def handle_kanji_learn_command(args: argparse.Namespace) -> None:
+    """
+    Handler for the 'kanji learn' command.
+
+    Starts an interactive kanji learning session with box logic.
+
+    Args:
+        args: Parsed command-line arguments with 'limit' and 'test'.
+    """
+    from nihon_cli.core.quiz_kanji import KanjiQuiz
+    from nihon_cli.core.timer import LearningTimer
+    from nihon_cli.infra.kanji_repository import KanjiRepository
+
+    try:
+        repository = KanjiRepository()
+        quiz = KanjiQuiz(repository)
+
+        interval_seconds = 5 if args.test else 1500
+
+        while True:
+            questions_asked = quiz.run_session(limit=args.limit)
+
+            if questions_asked > 0:
+                timer = LearningTimer(interval_seconds)
+                timer.wait_for_next_session()
+            else:
+                break
+
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Lernsitzung abgebrochen.")
+        sys.exit(0)
+    except Exception as e:
+        print(f"✗ Unerwarteter Fehler: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+
+def handle_kanji_list_command(args: argparse.Namespace) -> None:
+    """
+    Handler for the 'kanji list' command.
+
+    Shows all imported kanji with their progress.
+    """
+    from nihon_cli.infra.kanji_repository import KanjiRepository
+    from nihon_cli.ui.formatting import draw_box, COLOR_GREEN, COLOR_RESET
+
+    try:
+        repo = KanjiRepository()
+        all_kanji = repo.get_all_kanji()
+
+        if not all_kanji:
+            print("\n✗ Keine Kanji importiert.")
+            print("Verwenden Sie 'nihon-cli kanji import <bild>' um Kanji zu importieren.")
+            sys.exit(0)
+
+        stats = repo.get_statistics()
+
+        header = (
+            f"Gesamt: {stats['total']}  |  "
+            f"Gelernt: {COLOR_GREEN}{stats['completed']}{COLOR_RESET}  |  "
+            f"Offen: {stats['in_progress']}"
+        )
+        print("\n" + draw_box(header, title="漢字 Kanji-Übersicht"))
+
+        print()
+        for item in all_kanji:
+            readings = ", ".join(item.readings_japanese)
+            status = f"{COLOR_GREEN}✓{COLOR_RESET}" if item.completed else f"{item.correct_count}/5"
+            print(f"  {item.kanji}  {readings}  ({item.meaning_german})  [{status}]")
+
+    except Exception as e:
+        print(f"✗ Fehler: {e}")
+        sys.exit(1)
+
+
 def handle_config_set_command(key: str, value: str) -> None:
     """
     Handler for the 'config set' command.
@@ -578,6 +746,18 @@ def handle_config_set_command(key: str, value: str) -> None:
     except Exception as e:
         print(f"✗ Fehler beim Speichern der Konfiguration: {e}")
         sys.exit(1)
+
+
+def handle_flash_katakana_command(args: argparse.Namespace) -> None:
+    from nihon_cli.core.flash import run_flash_katakana
+
+    run_flash_katakana()
+
+
+def handle_flash_kanji_command(args: argparse.Namespace) -> None:
+    from nihon_cli.core.flash import run_flash_kanji
+
+    run_flash_kanji()
 
 
 def setup_argument_parser() -> argparse.ArgumentParser:
@@ -760,6 +940,75 @@ def setup_argument_parser() -> argparse.ArgumentParser:
         help="Show current week's progress and statistics"
     )
     status_parser.set_defaults(func=handle_weekly_session_status_command)
+
+    # Subparser for 'kanji'
+    kanji_parser = subparsers.add_parser(
+        "kanji", help="Kanji learning and management"
+    )
+    kanji_subparsers = kanji_parser.add_subparsers(
+        dest="kanji_command", help="Kanji sub-commands"
+    )
+
+    # kanji import
+    kanji_import_parser = kanji_subparsers.add_parser(
+        "import",
+        help="Import kanji from image files using OCR"
+    )
+    kanji_import_parser.add_argument(
+        "image_paths",
+        nargs='+',
+        type=str,
+        help="Paths to image files containing kanji"
+    )
+    kanji_import_parser.add_argument(
+        "--tag",
+        type=str,
+        help="Optional tag for this import (default: kanji_<date>)"
+    )
+    kanji_import_parser.set_defaults(func=handle_kanji_import_command)
+
+    # kanji learn
+    kanji_learn_parser = kanji_subparsers.add_parser(
+        "learn",
+        help="Start an interactive kanji learning session"
+    )
+    kanji_learn_parser.add_argument(
+        "--limit",
+        type=int,
+        default=15,
+        help="Number of kanji per session (default: 15)"
+    )
+    kanji_learn_parser.add_argument(
+        "--test",
+        action="store_true",
+        help="Run in 5-second test mode instead of 25-minute intervals"
+    )
+    kanji_learn_parser.set_defaults(func=handle_kanji_learn_command)
+
+    # kanji list
+    kanji_list_parser = kanji_subparsers.add_parser(
+        "list",
+        help="Show all imported kanji with learning progress"
+    )
+    kanji_list_parser.set_defaults(func=handle_kanji_list_command)
+
+    # Subparser for 'flash'
+    flash_parser = subparsers.add_parser(
+        "flash", help="Flash card window for learning characters"
+    )
+    flash_subparsers = flash_parser.add_subparsers(
+        dest="flash_command", help="Flash card sub-commands"
+    )
+
+    flash_katakana_parser = flash_subparsers.add_parser(
+        "katakana", help="Katakana flash cards in a floating window"
+    )
+    flash_katakana_parser.set_defaults(func=handle_flash_katakana_command)
+
+    flash_kanji_parser = flash_subparsers.add_parser(
+        "kanji", help="Kanji flash cards (unlearned kanji from database)"
+    )
+    flash_kanji_parser.set_defaults(func=handle_flash_kanji_command)
 
     # Subparser for 'config'
     config_parser = subparsers.add_parser(
